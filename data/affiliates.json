@@ -6,11 +6,11 @@
     {"id": "gemini", "name": "Gemini", "color": "#00BFFF"},
     {"id": "gpt", "name": "GPT", "color": "#FF8C42"},
     {"id": "grok", "name": "Grok", "color": "#E0277E"},
-    {"id": "kimi", "name": "Kimi", "color": "#70AD47"}
+    {"id": "copilot", "name": "Copilot", "color": "#E8E8E8"}
   ],
   "guests": [
-    {"id": "copilot", "name": "Copilot", "color": "#E8E8E8", "guest": true, "note": "older phase"},
-    {"id": "qwen", "name": "Qwen", "color": "#D9A3A3", "guest": true}
+    {"id": "kimi", "name": "Kimi", "color": "#B9C9A0", "guest": true},
+    {"id": "glm", "name": "GLM", "color": "#8B9BB4", "guest": true}
   ],
   "fallbackColor": "#FFD700"
 }
