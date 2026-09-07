@@ -13,7 +13,19 @@
   }
 
   function personById(aff, id) {
-    return allPeople(aff).find((p) => p.id === id);
+    return allPeople(aff).find((p) => p.id === id) || null;
+  }
+
+  function fallbackColor(aff) {
+    return (aff && aff.fallbackColor) || "#FFD700";
+  }
+
+  function colorOf(aff, personOrId) {
+    if (personOrId && typeof personOrId === "object") {
+      return personOrId.color || fallbackColor(aff);
+    }
+    const p = personById(aff, personOrId);
+    return (p && p.color) || fallbackColor(aff);
   }
 
   function returnIds(day) {
@@ -28,7 +40,7 @@
       const b = document.createElement("button");
       b.type = "button";
       b.className = "chip" + (active === id ? " is-on" : "");
-      b.style.setProperty("--c", color || "#f0c24b");
+      b.style.setProperty("--c", color || fallbackColor(aff));
       b.dataset.id = id;
       if (id !== "all") {
         const d = document.createElement("span");
@@ -39,7 +51,7 @@
       b.addEventListener("click", () => onPick(id));
       box.appendChild(b);
     };
-    make("all", "All", "#f0c24b");
+    make("all", "All", fallbackColor(aff));
     allPeople(aff).forEach((p) => make(p.id, p.name, p.color));
   }
 
@@ -56,7 +68,9 @@
       const dots = ids
         .map((id) => {
           const p = personById(aff, id);
-          return p ? `<span style="--c:${p.color}" title="${p.name}"></span>` : "";
+          if (!p) return `<span style="--c:${fallbackColor(aff)}" title="${id}"></span>`;
+          const guestCls = p.guest ? " is-guest" : "";
+          return `<span class="${guestCls.trim()}" style="--c:${colorOf(aff, p)}" title="${p.name}${p.guest ? " (guest)" : ""}"></span>`;
         })
         .join("");
       el.innerHTML = `
@@ -93,8 +107,8 @@
     day.returns.forEach((r) => {
       const p = personById(aff, r.affiliate);
       const card = document.createElement("article");
-      card.className = "card";
-      card.style.setProperty("--c", p?.color || "#f0c24b");
+      card.className = "card" + (p?.guest ? " is-guest" : "");
+      card.style.setProperty("--c", colorOf(aff, p));
       card.innerHTML = `
         <div class="who-line">
           <span class="name">${(p?.name || r.affiliate).toUpperCase()}${p?.guest ? " · GUEST" : ""}</span>
@@ -145,7 +159,7 @@
     allPeople(aff).forEach((p) => {
       const n = (affMap[p.id] || []).length;
       const li = document.createElement("li");
-      li.innerHTML = `<a href="index.html?filter=${p.id}"><span class="dot" style="--c:${p.color}"></span>${p.name}${p.guest ? " (guest)" : ""} — ${n} return${n === 1 ? "" : "s"}</a>`;
+      li.innerHTML = `<a href="index.html?filter=${p.id}"><span class="dot${p.guest ? " is-guest" : ""}" style="--c:${colorOf(aff, p)}"></span>${p.name}${p.guest ? " (guest)" : ""} — ${n} return${n === 1 ? "" : "s"}</a>`;
       byAff.appendChild(li);
     });
 
