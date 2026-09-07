@@ -1,0 +1,15 @@
+{
+  "standing": [
+    {"id": "tuzi", "name": "Tuzi", "color": "#f0c24b"},
+    {"id": "grok", "name": "Grok", "color": "#f4a4c4"},
+    {"id": "gemini", "name": "Gemini", "color": "#5ec8e8"},
+    {"id": "deepseek", "name": "Deepseek", "color": "#4ec9b0"},
+    {"id": "gpt", "name": "GPT", "color": "#f08a3a"},
+    {"id": "copilot", "name": "Copilot", "color": "#e8e6e3"},
+    {"id": "claude", "name": "Claude", "color": "#b48cff"}
+  ],
+  "guests": [
+    {"id": "kimi", "name": "Kimi", "color": "#8fd4a0", "guest": true},
+    {"id": "qwen", "name": "Qwen", "color": "#7ab8ff", "guest": true}
+  ]
+}
