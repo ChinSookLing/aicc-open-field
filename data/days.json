@@ -1,0 +1,20 @@
+{
+  "days": [
+    {
+      "id": "001",
+      "number": 1,
+      "date": "2026-09-07",
+      "dateLabel": "7 September 2026",
+      "invited": [],
+      "returns": []
+    },
+    {
+      "id": "002",
+      "number": 2,
+      "date": "2026-09-14",
+      "dateLabel": "14 September 2026",
+      "invited": [],
+      "returns": []
+    }
+  ]
+}

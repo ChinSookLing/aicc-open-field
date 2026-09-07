@@ -1,0 +1,16 @@
+{
+  "standing": [
+    {"id": "tuzi", "name": "Tuzi", "color": "#FFD700", "role": "human"},
+    {"id": "claude", "name": "Claude", "color": "#B14EFF"},
+    {"id": "deepseek", "name": "DeepSeek", "color": "#1ABC9C"},
+    {"id": "gemini", "name": "Gemini", "color": "#00BFFF"},
+    {"id": "gpt", "name": "GPT", "color": "#FF8C42"},
+    {"id": "grok", "name": "Grok", "color": "#E0277E"},
+    {"id": "kimi", "name": "Kimi", "color": "#70AD47"}
+  ],
+  "guests": [
+    {"id": "copilot", "name": "Copilot", "color": "#E8E8E8", "guest": true, "note": "older phase"},
+    {"id": "qwen", "name": "Qwen", "color": "#D9A3A3", "guest": true}
+  ],
+  "fallbackColor": "#FFD700"
+}
