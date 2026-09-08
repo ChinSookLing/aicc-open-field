@@ -85,6 +85,28 @@
     });
   }
 
+  function fillReturnCard(card, aff, day, r) {
+    const p = personById(aff, r.affiliate);
+    card.className = "card" + (p?.guest ? " is-guest" : "");
+    card.style.setProperty("--c", colorOf(aff, p));
+    if (r.id) card.dataset.returnId = r.id;
+    const dayLabel = day ? `DAY ${String(day.number).padStart(3, "0")}` : "";
+    const dayHref = day ? `day.html?d=${encodeURIComponent(day.id)}` : "#";
+    card.innerHTML = `
+      <div class="who-line">
+        <span class="name">${(p?.name || r.affiliate).toUpperCase()}${p?.guest ? " · GUEST" : ""}</span>
+        ${r.id ? `<span class="kw rid">${r.id}</span>` : ""}
+        ${day ? `<a class="kw daylink" href="${dayHref}">${dayLabel}</a>` : ""}
+        ${r.keyword ? `<span class="kw">${r.keyword}</span>` : ""}
+        <span class="kw">${r.date || (day && day.date) || ""}</span>
+        ${r.form ? `<span class="kw">${r.form}</span>` : ""}
+        ${r.destination ? `<span class="kw">${r.destination}</span>` : ""}
+        ${r.timestamp ? `<span class="kw">${r.timestamp}</span>` : ""}
+      </div>
+      <div class="body"></div>`;
+    card.querySelector(".body").textContent = r.body || "";
+  }
+
   function renderDay(day, aff) {
     const title = $("#day-title");
     const meta = $("#day-meta");
@@ -105,21 +127,73 @@
       return;
     }
     day.returns.forEach((r) => {
-      const p = personById(aff, r.affiliate);
       const card = document.createElement("article");
-      card.className = "card" + (p?.guest ? " is-guest" : "");
-      card.style.setProperty("--c", colorOf(aff, p));
-      card.innerHTML = `
-        <div class="who-line">
-          <span class="name">${(p?.name || r.affiliate).toUpperCase()}${p?.guest ? " · GUEST" : ""}</span>
-          ${r.keyword ? `<span class="kw">${r.keyword}</span>` : ""}
-          <span class="kw">${r.date || day.date}</span>
-          ${r.form ? `<span class="kw">${r.form}</span>` : ""}
-        </div>
-        <div class="body"></div>`;
-      card.querySelector(".body").textContent = r.body || "";
+      fillReturnCard(card, aff, day, r);
       box.appendChild(card);
     });
+  }
+
+  function renderAffiliateReturns(days, aff, filter) {
+    const panel = $("#filter-returns");
+    const pathScroll = $(".path-scroll");
+    const blurb = $(".blurb");
+    if (!panel) return;
+
+    if (filter === "all") {
+      panel.hidden = true;
+      panel.innerHTML = "";
+      if (pathScroll) pathScroll.hidden = false;
+      if (blurb) {
+        blurb.hidden = false;
+        blurb.textContent =
+          "Each lantern is a day. Coloured marks are who came home. A day can exist with nobody returning.";
+      }
+      return;
+    }
+
+    if (pathScroll) pathScroll.hidden = true;
+    if (blurb) {
+      blurb.hidden = false;
+      const p = personById(aff, filter);
+      blurb.textContent =
+        (p ? p.name : filter) +
+        " — returns listed below (date + content). Back to All to see the night path.";
+    }
+
+    const items = [];
+    days.forEach((day) => {
+      (day.returns || []).forEach((r) => {
+        if (r.affiliate === filter) items.push({ day, r });
+      });
+    });
+
+    panel.hidden = false;
+    panel.innerHTML = "";
+    const head = document.createElement("div");
+    head.className = "filter-head";
+    const p = personById(aff, filter);
+    head.innerHTML = `<h2 class="filter-title">${(p?.name || filter).toUpperCase()}${
+      p?.guest ? " · GUEST" : ""
+    }</h2>
+      <p class="filter-meta">${items.length} return${items.length === 1 ? "" : "s"}</p>`;
+    panel.appendChild(head);
+
+    if (!items.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-day";
+      empty.innerHTML = "No returns from this Affiliate yet.";
+      panel.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.className = "returns filter-list";
+    items.forEach(({ day, r }) => {
+      const card = document.createElement("article");
+      fillReturnCard(card, aff, day, r);
+      list.appendChild(card);
+    });
+    panel.appendChild(list);
   }
 
   function renderFieldIndex(days, aff) {
@@ -142,19 +216,6 @@
       });
     });
 
-    const list = (el, items, labelFn, hrefFn) => {
-      el.innerHTML = "";
-      if (!items.length) {
-        el.innerHTML = `<li style="color:var(--muted)">No returns yet.</li>`;
-        return;
-      }
-      items.forEach((it) => {
-        const li = document.createElement("li");
-        li.innerHTML = `<a href="${hrefFn(it)}">${labelFn(it)}</a>`;
-        el.appendChild(li);
-      });
-    };
-
     byAff.innerHTML = "";
     allPeople(aff).forEach((p) => {
       const n = (affMap[p.id] || []).length;
@@ -169,7 +230,10 @@
       : `<li style="color:var(--muted)">No returns yet.</li>`;
 
     byDay.innerHTML = days
-      .map((d) => `<li><a href="day.html?d=${d.id}">Day ${String(d.number).padStart(3, "0")} · ${d.dateLabel || d.date} · ${(d.returns || []).length} returned</a></li>`)
+      .map(
+        (d) =>
+          `<li><a href="day.html?d=${d.id}">Day ${String(d.number).padStart(3, "0")} · ${d.dateLabel || d.date} · ${(d.returns || []).length} returned</a></li>`
+      )
       .join("");
 
     const forms = Object.keys(formMap).sort();
@@ -197,7 +261,10 @@
           history.replaceState(null, "", u);
           paint();
         });
-        renderPath(days, aff, filter);
+        if (filter === "all") {
+          renderPath(days, aff, filter);
+        }
+        renderAffiliateReturns(days, aff, filter);
       };
       paint();
     }
