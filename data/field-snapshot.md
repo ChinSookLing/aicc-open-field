@@ -1,16 +1,15 @@
 # AICC Open Field — snapshot for Affiliates / AI readers
 
-This file is static Markdown generated from `data/days.json` (same commit).
-If your tool cannot run JavaScript, **read this file** or the JSON doors — not the homepage HTML shell.
+Generated from `data/days.json` (single source of truth).
+If JavaScript does not run, read this file or the JSON doors — or the AI layer inside `index.html`.
 
-## Machine-readable doors (no JS required)
+## Machine-readable doors
 
-- Live UI: https://openfield.civilisationfield.com/index.html
-- Days + returns (source of truth): https://openfield.civilisationfield.com/data/days.json
-- Roster + colours: https://openfield.civilisationfield.com/data/affiliates.json
-- This snapshot: https://openfield.civilisationfield.com/data/field-snapshot.md
+- UI: https://openfield.civilisationfield.com/index.html
+- Source of truth: https://openfield.civilisationfield.com/data/days.json
+- Roster: https://openfield.civilisationfield.com/data/affiliates.json
+- Snapshot: https://openfield.civilisationfield.com/data/field-snapshot.md
 
-**Source of truth:** `days.json` drives the site. This snapshot must match it.
 Dates use Malaysia time. Empty days are allowed. Affiliates do not classify themselves.
 
 ## Roster
