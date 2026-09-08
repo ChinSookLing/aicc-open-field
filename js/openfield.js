@@ -133,59 +133,57 @@
     });
   }
 
-  function renderAffiliateReturns(days, aff, filter) {
+  function collectReturns(days, pred) {
+    const items = [];
+    days.forEach((day) => {
+      (day.returns || []).forEach((r) => {
+        if (pred(day, r)) items.push({ day, r });
+      });
+    });
+    return items;
+  }
+
+  function showNightPath() {
+    const panel = $("#filter-returns");
+    const pathScroll = $(".path-scroll");
+    const blurb = $(".blurb");
+    if (panel) {
+      panel.hidden = true;
+      panel.innerHTML = "";
+    }
+    if (pathScroll) pathScroll.hidden = false;
+    if (blurb) {
+      blurb.hidden = false;
+      blurb.textContent =
+        "Each lantern is a day. Coloured marks are who came home. A day can exist with nobody returning.";
+    }
+  }
+
+  function showReturnList(aff, title, metaEmpty, items) {
     const panel = $("#filter-returns");
     const pathScroll = $(".path-scroll");
     const blurb = $(".blurb");
     if (!panel) return;
-
-    if (filter === "all") {
-      panel.hidden = true;
-      panel.innerHTML = "";
-      if (pathScroll) pathScroll.hidden = false;
-      if (blurb) {
-        blurb.hidden = false;
-        blurb.textContent =
-          "Each lantern is a day. Coloured marks are who came home. A day can exist with nobody returning.";
-      }
-      return;
-    }
-
     if (pathScroll) pathScroll.hidden = true;
     if (blurb) {
       blurb.hidden = false;
-      const p = personById(aff, filter);
       blurb.textContent =
-        (p ? p.name : filter) +
-        " — returns listed below (date + content). Back to All to see the night path.";
+        title + " — returns listed below (date + content). Back to All to see the night path.";
     }
-
-    const items = [];
-    days.forEach((day) => {
-      (day.returns || []).forEach((r) => {
-        if (r.affiliate === filter) items.push({ day, r });
-      });
-    });
-
     panel.hidden = false;
     panel.innerHTML = "";
     const head = document.createElement("div");
     head.className = "filter-head";
-    const p = personById(aff, filter);
-    head.innerHTML = `<h2 class="filter-title">${(p?.name || filter).toUpperCase()}${
-      p?.guest ? " · GUEST" : ""
-    }</h2>
+    head.innerHTML = `<h2 class="filter-title">${title}</h2>
       <p class="filter-meta">${items.length} return${items.length === 1 ? "" : "s"}</p>`;
     panel.appendChild(head);
-
     if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "empty-day";
-      empty.innerHTML = "No returns from this Affiliate yet.";
+      empty.textContent = metaEmpty;
       panel.appendChild(empty);
       return;
     }
-
     const list = document.createElement("div");
     list.className = "returns filter-list";
     items.forEach(({ day, r }) => {
@@ -194,6 +192,39 @@
       list.appendChild(card);
     });
     panel.appendChild(list);
+  }
+
+  function renderAffiliateReturns(days, aff, filter) {
+    if (filter === "all") {
+      showNightPath();
+      return;
+    }
+    const p = personById(aff, filter);
+    const title = (p?.name || filter).toUpperCase() + (p?.guest ? " · GUEST" : "");
+    const items = collectReturns(days, (_day, r) => r.affiliate === filter);
+    showReturnList(aff, title, "No returns from this Affiliate yet.", items);
+  }
+
+  function renderFormReturns(days, aff, form) {
+    const key = (form || "").toLowerCase();
+    const items = collectReturns(
+      days,
+      (_day, r) => ((r.form || "Words").toLowerCase() === key)
+    );
+    const title = "FORM · " + key.toUpperCase();
+    showReturnList(aff, title, "No returns in this form yet.", items);
+  }
+
+  function renderDateReturns(days, aff, date) {
+    const items = collectReturns(
+      days,
+      (day, r) => (r.date || day.date) === date
+    );
+    const day = days.find((d) => d.date === date);
+    const title = day
+      ? `DATE · ${day.dateLabel || day.date}`
+      : "DATE · " + date;
+    showReturnList(aff, title, "No returns on this date yet.", items);
   }
 
   function renderFieldIndex(days, aff) {
@@ -226,19 +257,19 @@
 
     const months = Object.keys(monthMap).sort();
     byMonth.innerHTML = months.length
-      ? months.map((m) => `<li><a href="index.html">${m} — ${monthMap[m].length}</a></li>`).join("")
+      ? months.map((m) => `<li><a href="index.html?month=${encodeURIComponent(m)}">${m} — ${monthMap[m].length}</a></li>`).join("")
       : `<li style="color:var(--muted)">No returns yet.</li>`;
 
     byDay.innerHTML = days
       .map(
         (d) =>
-          `<li><a href="day.html?d=${d.id}">Day ${String(d.number).padStart(3, "0")} · ${d.dateLabel || d.date} · ${(d.returns || []).length} returned</a></li>`
+          `<li><a href="index.html?date=${encodeURIComponent(d.date)}">Day ${String(d.number).padStart(3, "0")} · ${d.dateLabel || d.date} · ${(d.returns || []).length} returned</a> · <a href="day.html?d=${d.id}">day page</a></li>`
       )
       .join("");
 
     const forms = Object.keys(formMap).sort();
     byForm.innerHTML = forms.length
-      ? forms.map((f) => `<li><a href="index.html">${f} — ${formMap[f].length}</a></li>`).join("")
+      ? forms.map((f) => `<li><a href="index.html?form=${encodeURIComponent(f)}">${f} — ${formMap[f].length}</a></li>`).join("")
       : `<li style="color:var(--muted)">No returns yet.</li>`;
   }
 
@@ -251,20 +282,56 @@
     const days = data.days || [];
 
     if (page === "home") {
-      let filter = new URLSearchParams(location.search).get("filter") || "all";
+      const params = new URLSearchParams(location.search);
+      let filter = params.get("filter") || "all";
+      let form = params.get("form") || "";
+      let date = params.get("date") || "";
+      let month = params.get("month") || "";
+
+      const clearDataFilters = (u) => {
+        u.searchParams.delete("form");
+        u.searchParams.delete("date");
+        u.searchParams.delete("month");
+      };
+
       const paint = () => {
-        renderFilters(aff, filter, (id) => {
+        const mode = form ? "form" : date ? "date" : month ? "month" : "affiliate";
+        const chipActive = mode === "affiliate" ? filter : "all";
+        renderFilters(aff, chipActive, (id) => {
           filter = id;
+          form = "";
+          date = "";
+          month = "";
           const u = new URL(location.href);
+          clearDataFilters(u);
           if (id === "all") u.searchParams.delete("filter");
           else u.searchParams.set("filter", id);
           history.replaceState(null, "", u);
           paint();
         });
-        if (filter === "all") {
-          renderPath(days, aff, filter);
+        if (mode === "form") {
+          renderPath(days, aff, "all");
+          renderFormReturns(days, aff, form);
+        } else if (mode === "date") {
+          renderPath(days, aff, "all");
+          renderDateReturns(days, aff, date);
+        } else if (mode === "month") {
+          renderPath(days, aff, "all");
+          const items = collectReturns(days, (day, r) =>
+            ((r.date || day.date || "").slice(0, 7) === month)
+          );
+          showReturnList(
+            aff,
+            "MONTH · " + month,
+            "No returns in this month yet.",
+            items
+          );
+        } else {
+          if (filter === "all") {
+            renderPath(days, aff, filter);
+          }
+          renderAffiliateReturns(days, aff, filter);
         }
-        renderAffiliateReturns(days, aff, filter);
       };
       paint();
     }
