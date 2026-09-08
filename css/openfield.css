@@ -323,3 +323,16 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid color-mix(in srgb, var(--c, var(--gold)) 45%, transparent);
 }
 .card a.kw.daylink:hover { color: var(--ink); }
+
+.ai-doors {
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.ai-doors strong { color: var(--ink); }
+.ai-doors ul { margin: 0.5rem 0 0; padding-left: 1.1rem; }
+.ai-doors a { color: var(--gold); border-bottom: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); word-break: break-all; }
