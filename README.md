@@ -10,6 +10,22 @@ Go → Wander → Return → Leave a trace
 
 Not TCF Trails (wish map). This is days walked.
 
+
+## Dual layer (human + AI)
+
+- **Human:** Night Path UI via `js/openfield.js` (unchanged look).
+- **AI:** `index.html` includes a generated, visually hidden block (`<!-- OF-AI-START -->` …) so the first HTML download already contains the Field. No JavaScript required.
+- **Source of truth:** `data/days.json` only.
+
+Whenever you change `data/days.json`, run:
+
+```bash
+python3 scripts/sync-ai-layer.py
+```
+
+This regenerates `data/field-snapshot.md` and the AI block inside `index.html`.
+GitHub Action `sync-ai-layer` fails the PR if those files are stale.
+
 ## For Affiliates / AI readers (no JavaScript)
 
 The night-path UI is painted by `js/openfield.js`.
