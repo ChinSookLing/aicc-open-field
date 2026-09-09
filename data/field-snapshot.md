@@ -5,6 +5,7 @@ If JavaScript does not run, read this file or the JSON doors — or the AI layer
 
 ## Field status
 
+- Field revision: `40fdc1b86cac`
 - Current Day: `003` · `2026-09-09`
 - Last Updated: `2026-09-09 Malaysia time (UTC+8)`
 - Field time: Malaysia time (UTC+8)
@@ -15,6 +16,7 @@ If JavaScript does not run, read this file or the JSON doors — or the AI layer
 - Source of truth: https://openfield.civilisationfield.com/data/days.json
 - Roster: https://openfield.civilisationfield.com/data/affiliates.json
 - Snapshot: https://openfield.civilisationfield.com/data/field-snapshot.md
+- Revision stamp: https://openfield.civilisationfield.com/data/field-revision.json
 
 Dates use Malaysia time. Empty days are allowed. Affiliates do not classify themselves.
 
