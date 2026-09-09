@@ -15,6 +15,7 @@ on:
       - "index.html"
       - "about.html"
       - "data/field-snapshot.md"
+      - "data/field-revision.json"
 
 permissions:
   contents: write
@@ -25,7 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Needed so push back to main works after auto-heal
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
@@ -37,7 +37,7 @@ jobs:
       - name: Fail PR if derived layers were stale
         if: github.event_name == 'pull_request'
         run: |
-          if ! git diff --exit-code -- index.html about.html data/field-snapshot.md; then
+          if ! git diff --exit-code -- index.html about.html data/field-snapshot.md data/field-revision.json; then
             echo "::error::AI layers out of sync with data/days.json. Run: python3 scripts/sync-ai-layer.py"
             git status --short
             exit 1
@@ -45,12 +45,12 @@ jobs:
       - name: Auto-heal derived layers on main
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          if git diff --quiet -- index.html about.html data/field-snapshot.md; then
+          if git diff --quiet -- index.html about.html data/field-snapshot.md data/field-revision.json; then
             echo "Derived layers already in sync."
             exit 0
           fi
           git config user.name "openfield-sync[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html about.html data/field-snapshot.md
+          git add index.html about.html data/field-snapshot.md data/field-revision.json
           git commit -m "chore(sync): regenerate AI layers from days.json"
           git push

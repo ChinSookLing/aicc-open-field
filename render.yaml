@@ -1,0 +1,24 @@
+# Render Static Site headers — Field doors must not diverge at the edge.
+# If this service is already configured in the Render dashboard, merge these
+# header rules there (or link this Blueprint) so Cloudflare stops seeing s-maxage=300.
+services:
+  - type: web
+    name: aicc-open-field
+    runtime: static
+    staticPublishPath: .
+    headers:
+      - path: /data/*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate, s-maxage=0
+      - path: /index.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate, s-maxage=0
+      - path: /about.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate, s-maxage=0
+      - path: /day.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate, s-maxage=0
+      - path: /field-index.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate, s-maxage=0

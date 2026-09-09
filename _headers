@@ -1,0 +1,17 @@
+# Open Field — do not edge-cache Field doors independently (prevents mixed deploys).
+# Cloudflare / Netlify-style; Render may also pick these up depending on setup.
+
+/data/*
+  Cache-Control: public, max-age=0, must-revalidate, s-maxage=0
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate, s-maxage=0
+
+/about.html
+  Cache-Control: public, max-age=0, must-revalidate, s-maxage=0
+
+/day.html
+  Cache-Control: public, max-age=0, must-revalidate, s-maxage=0
+
+/field-index.html
+  Cache-Control: public, max-age=0, must-revalidate, s-maxage=0
