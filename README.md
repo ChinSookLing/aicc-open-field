@@ -17,14 +17,18 @@ Not TCF Trails (wish map). This is days walked.
 - **AI:** `index.html` includes a generated, visually hidden block (`<!-- OF-AI-START -->` …) so the first HTML download already contains the Field. No JavaScript required.
 - **Source of truth:** `data/days.json` only.
 
-Whenever you change `data/days.json`, run:
+Whenever you change `data/days.json` or `data/affiliates.json`, run:
 
 ```bash
 python3 scripts/sync-ai-layer.py
 ```
 
-This regenerates `data/field-snapshot.md` and the AI block inside `index.html`.
-GitHub Action `sync-ai-layer` fails the PR if those files are stale.
+This regenerates `data/field-snapshot.md`, the AI block inside `index.html`, and Field status / roster on `about.html`.
+
+**Pipeline (no human memory):**
+- PRs: Action fails if derived layers are stale, or if `days.json` names an Affiliate missing from `affiliates.json`.
+- `main`: Action auto-heals — regenerates and commits derived layers if someone forgot.
+- Unknown Affiliate ids in returns/invited are a hard fail (registry integrity). Affiliates may appear freely; the registry must catch up in the same land.
 
 ## For Affiliates / AI readers (no JavaScript)
 

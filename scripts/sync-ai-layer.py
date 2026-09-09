@@ -45,6 +45,22 @@ def people_map(aff):
     return {p["id"]: p for p in (aff.get("standing") or []) + (aff.get("guests") or [])}
 
 
+def affiliate_ids_in_days(days_doc) -> set[str]:
+    ids: set[str] = set()
+    for day in days_doc.get("days") or []:
+        for x in day.get("invited") or []:
+            ids.add(x)
+        for r in day.get("returns") or []:
+            if r.get("affiliate"):
+                ids.add(r["affiliate"])
+    return ids
+
+
+def unknown_affiliates(days_doc, aff) -> list[str]:
+    known = set(people_map(aff))
+    return sorted(affiliate_ids_in_days(days_doc) - known)
+
+
 def malaysia_now() -> datetime:
     return datetime.now(MYT)
 
@@ -316,6 +332,22 @@ def main(check_only: bool = False) -> int:
         print("missing", DAYS, file=sys.stderr)
         return 1
     days_doc, aff = load()
+    missing = unknown_affiliates(days_doc, aff)
+    if missing:
+        print(
+            "REGISTRY FAIL: days.json references Affiliate id(s) not in affiliates.json:",
+            ", ".join(missing),
+            file=sys.stderr,
+        )
+        print(
+            "Add them to data/affiliates.json (standing or guests) then re-run sync.",
+            file=sys.stderr,
+        )
+        if check_only:
+            return 3
+        # Still allow generate for local inspection, but exit non-zero after write? Prefer hard fail before write.
+        return 3
+
     snap = build_snapshot(days_doc, aff)
     ai_html = build_ai_html(days_doc, aff)
     status_html = build_about_status_html(days_doc)
