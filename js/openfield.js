@@ -65,17 +65,28 @@
       const el = document.createElement("div");
       el.className = "lantern" + (ids.length ? "" : " is-empty") + (match ? " is-focus" : " is-dim");
       const href = "day.html?d=" + encodeURIComponent(day.id);
-      const dots = ids
-        .map((id) => {
-          const p = personById(aff, id);
-          if (!p) return `<span style="--c:${fallbackColor(aff)}" title="${id}"></span>`;
-          const guestCls = p.guest ? " is-guest" : "";
-          return `<span class="${guestCls.trim()}" style="--c:${colorOf(aff, p)}" title="${p.name}${p.guest ? " (guest)" : ""}"></span>`;
-        })
-        .join("");
+      const mark = (id) => {
+        const p = personById(aff, id);
+        if (!p) return { guest: false, html: `<span style="--c:${fallbackColor(aff)}" title="${id}"></span>` };
+        const guestCls = p.guest ? " is-guest" : "";
+        return {
+          guest: !!p.guest,
+          html: `<span class="${guestCls.trim()}" style="--c:${colorOf(aff, p)}" title="${p.name}${p.guest ? " (guest)" : ""}"></span>`,
+        };
+      };
+      const standingDots = [];
+      const guestDots = [];
+      ids.forEach((id) => {
+        const m = mark(id);
+        (m.guest ? guestDots : standingDots).push(m.html);
+      });
+      const dotsHtml = ids.length
+        ? `<div class="dots-row dots-row-standing">${standingDots.join("") || "&nbsp;"}</div>` +
+          (guestDots.length ? `<div class="dots-row dots-row-guests">${guestDots.join("")}</div>` : "")
+        : "&nbsp;";
       el.innerHTML = `
         <a href="${href}">
-          <div class="dots">${dots || "&nbsp;"}</div>
+          <div class="dots">${dotsHtml}</div>
           <div class="flame" aria-hidden="true"></div>
           <div class="pole" aria-hidden="true"></div>
           <div class="label">DAY ${String(day.number).padStart(2, "0")}</div>
