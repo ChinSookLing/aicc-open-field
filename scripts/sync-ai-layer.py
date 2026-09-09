@@ -3,15 +3,20 @@
 
 Writes:
   - data/field-snapshot.md
+  - data/field-revision.json  (shared fieldRevision stamp)
   - injects <!-- OF-AI-START --> ... <!-- OF-AI-END --> into index.html
   - injects Field status + roster into about.html
     (<!-- OF-ABOUT-STATUS-START/END -->, <!-- OF-ABOUT-ROSTER-START/END -->)
+
+fieldRevision = first 12 hex of sha256(days.json bytes + NUL + affiliates.json bytes).
+Every derived layer must carry the same revision. Mismatch = mixed deploy/cache.
 
 Run whenever days.json or affiliates.json changes. GitHub Action also runs
 this on push/PR and fails if outputs are stale.
 """
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import re
@@ -23,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DAYS = ROOT / "data" / "days.json"
 AFF = ROOT / "data" / "affiliates.json"
 SNAP = ROOT / "data" / "field-snapshot.md"
+REV = ROOT / "data" / "field-revision.json"
 INDEX = ROOT / "index.html"
 ABOUT = ROOT / "about.html"
 
@@ -39,6 +45,28 @@ def load():
     days = json.loads(DAYS.read_text(encoding="utf-8"))
     aff = json.loads(AFF.read_text(encoding="utf-8"))
     return days, aff
+
+
+def compute_revision() -> dict:
+    days_b = DAYS.read_bytes()
+    aff_b = AFF.read_bytes()
+    days_sha = hashlib.sha256(days_b).hexdigest()
+    aff_sha = hashlib.sha256(aff_b).hexdigest()
+    rev = hashlib.sha256(days_b + b"\0" + aff_b).hexdigest()[:12]
+    return {
+        "fieldRevision": rev,
+        "daysSha256": days_sha,
+        "affiliatesSha256": aff_sha,
+        "doors": {
+            "days": "data/days.json",
+            "affiliates": "data/affiliates.json",
+            "snapshot": "data/field-snapshot.md",
+            "indexAiLayer": "index.html (OF-AI block)",
+            "aboutStatus": "about.html (Field status)",
+            "revision": "data/field-revision.json",
+        },
+        "note": "Same fieldRevision must appear in index.html AI layer, about.html Field status, field-snapshot.md, and this file. Mismatch means mixed deploy or edge cache.",
+    }
 
 
 def people_map(aff):
@@ -81,7 +109,6 @@ def field_status(days_doc) -> dict:
     else:
         current = {"id": "—", "number": 0, "date": today}
 
-    # Content-based stamp (stable for CI): latest return date, not wall clock.
     last_content = ""
     for d in days:
         for r in d.get("returns") or []:
@@ -105,7 +132,7 @@ def field_status(days_doc) -> dict:
     }
 
 
-def build_snapshot(days_doc, aff) -> str:
+def build_snapshot(days_doc, aff, rev: dict) -> str:
     people = people_map(aff)
     st = field_status(days_doc)
     L = []
@@ -117,6 +144,7 @@ def build_snapshot(days_doc, aff) -> str:
         "",
         "## Field status",
         "",
+        f"- Field revision: `{rev['fieldRevision']}`",
         f"- Current Day: `{st['current_num']}` · `{st['current_date']}`",
         f"- Last Updated: `{st['last_updated']}`",
         "- Field time: Malaysia time (UTC+8)",
@@ -127,6 +155,7 @@ def build_snapshot(days_doc, aff) -> str:
         "- Source of truth: https://openfield.civilisationfield.com/data/days.json",
         "- Roster: https://openfield.civilisationfield.com/data/affiliates.json",
         "- Snapshot: https://openfield.civilisationfield.com/data/field-snapshot.md",
+        "- Revision stamp: https://openfield.civilisationfield.com/data/field-revision.json",
         "",
         "Dates use Malaysia time. Empty days are allowed. Affiliates do not classify themselves.",
         "",
@@ -171,17 +200,20 @@ def build_snapshot(days_doc, aff) -> str:
     return "\n".join(L) + "\n"
 
 
-def build_ai_html(days_doc, aff) -> str:
+def build_ai_html(days_doc, aff, rev: dict) -> str:
     """Concise structured layer for index.html source. Visually hidden; present in HTML."""
     people = people_map(aff)
     st = field_status(days_doc)
+    rev_id = html.escape(rev["fieldRevision"])
     parts = [
         START,
-        '<section id="open-field-for-ai" class="ai-readable" aria-label="Machine-readable Open Field">',
+        f'<section id="open-field-for-ai" class="ai-readable" aria-label="Machine-readable Open Field" data-field-revision="{rev_id}">',
         "<h2>AICC Open Field — for AI readers</h2>",
         "<p>This block is in the first HTML download (no JavaScript required). "
         "Humans use the Night Path above. "
         "<code>data/days.json</code> is the single source of truth; this layer is generated from it.</p>",
+        f'<p><strong>Field revision:</strong> <code>{rev_id}</code> · '
+        f'<a href="https://openfield.civilisationfield.com/data/field-revision.json">data/field-revision.json</a></p>',
         f"<p><strong>Field status:</strong> Current Day {html.escape(st['current_num'])} · "
         f"{html.escape(st['current_date'])} · Last Updated {html.escape(st['last_updated'])}</p>",
         "<p>Also: "
@@ -237,14 +269,19 @@ def build_ai_html(days_doc, aff) -> str:
     return "\n".join(parts) + "\n"
 
 
-def build_about_status_html(days_doc) -> str:
+def build_about_status_html(days_doc, rev: dict) -> str:
     st = field_status(days_doc)
+    rev_id = html.escape(rev["fieldRevision"])
     return "\n".join(
         [
             STATUS_START,
-            '<section class="about-block about-status" aria-labelledby="field-status">',
+            f'<section class="about-block about-status" aria-labelledby="field-status" data-field-revision="{rev_id}">',
             '  <h2 id="field-status" class="about-h">Field status</h2>',
             '  <dl class="about-status-list">',
+            "    <div>",
+            "      <dt>Field revision</dt>",
+            f"      <dd><code>{rev_id}</code></dd>",
+            "    </div>",
             "    <div>",
             "      <dt>Current Day</dt>",
             f'      <dd>{html.escape(st["current_num"])} · {html.escape(st["current_date"])}</dd>',
@@ -327,6 +364,10 @@ def inject_marked(path: Path, start: str, end: str, block: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def revision_present(text: str, rev_id: str) -> bool:
+    return rev_id in text
+
+
 def main(check_only: bool = False) -> int:
     if not DAYS.exists():
         print("missing", DAYS, file=sys.stderr)
@@ -343,49 +384,68 @@ def main(check_only: bool = False) -> int:
             "Add them to data/affiliates.json (standing or guests) then re-run sync.",
             file=sys.stderr,
         )
-        if check_only:
-            return 3
-        # Still allow generate for local inspection, but exit non-zero after write? Prefer hard fail before write.
         return 3
 
-    snap = build_snapshot(days_doc, aff)
-    ai_html = build_ai_html(days_doc, aff)
-    status_html = build_about_status_html(days_doc)
+    rev = compute_revision()
+    rev_id = rev["fieldRevision"]
+    snap = build_snapshot(days_doc, aff, rev)
+    ai_html = build_ai_html(days_doc, aff, rev)
+    status_html = build_about_status_html(days_doc, rev)
     roster_html = build_about_roster_html(aff)
+    rev_json = json.dumps(rev, ensure_ascii=False, indent=2) + "\n"
 
     if check_only:
         ok = True
-        if SNAP.exists():
-            # Last Updated embeds wall clock — compare without that line for staleness of content
-            # Prefer full regenerate-and-diff in CI without --check clock issues:
-            # For --check, verify markers exist and Current Day matches.
-            st = field_status(days_doc)
-            about = ABOUT.read_text(encoding="utf-8") if ABOUT.exists() else ""
-            if STATUS_START not in about or STATUS_END not in about:
-                print("MISSING: OF-ABOUT-STATUS markers in about.html")
-                ok = False
-            elif f"{st['current_num']} · {st['current_date']}" not in about:
-                print("STALE: about.html Current Day does not match days.json")
-                ok = False
-            if ROSTER_START not in about or ROSTER_END not in about:
-                print("MISSING: OF-ABOUT-ROSTER markers in about.html")
-                ok = False
-            else:
-                for p in (aff.get("standing") or []) + (aff.get("guests") or []):
-                    if f"<li>{html.escape(p['name'])}</li>" not in about:
-                        print(f"STALE: about.html roster missing {p['name']}")
-                        ok = False
-                        break
+        st = field_status(days_doc)
+        about = ABOUT.read_text(encoding="utf-8") if ABOUT.exists() else ""
+        snap_text = SNAP.read_text(encoding="utf-8") if SNAP.exists() else ""
+        idx = INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
+        rev_text = REV.read_text(encoding="utf-8") if REV.exists() else ""
+
+        if not REV.exists():
+            print("MISSING: data/field-revision.json")
+            ok = False
         else:
+            try:
+                got = json.loads(rev_text)
+                if got.get("fieldRevision") != rev_id:
+                    print("STALE: field-revision.json does not match days+affiliates")
+                    ok = False
+            except json.JSONDecodeError:
+                print("INVALID: data/field-revision.json")
+                ok = False
+
+        if STATUS_START not in about or STATUS_END not in about:
+            print("MISSING: OF-ABOUT-STATUS markers in about.html")
+            ok = False
+        elif f"{st['current_num']} · {st['current_date']}" not in about:
+            print("STALE: about.html Current Day does not match days.json")
+            ok = False
+        elif not revision_present(about, rev_id):
+            print("STALE: about.html missing fieldRevision", rev_id)
+            ok = False
+
+        if ROSTER_START not in about or ROSTER_END not in about:
+            print("MISSING: OF-ABOUT-ROSTER markers in about.html")
+            ok = False
+        else:
+            for p in (aff.get("standing") or []) + (aff.get("guests") or []):
+                if f"<li>{html.escape(p['name'])}</li>" not in about:
+                    print(f"STALE: about.html roster missing {p['name']}")
+                    ok = False
+                    break
+
+        if not SNAP.exists():
             print("MISSING: data/field-snapshot.md")
             ok = False
-        if SNAP.exists():
-            snap_text = SNAP.read_text(encoding="utf-8")
-            st = field_status(days_doc)
+        else:
             if f"Current Day: `{st['current_num']}` · `{st['current_date']}`" not in snap_text:
                 print("STALE: field-snapshot.md Field status Current Day mismatch")
                 ok = False
-        idx = INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
+            if f"Field revision: `{rev_id}`" not in snap_text:
+                print("STALE: field-snapshot.md missing fieldRevision", rev_id)
+                ok = False
+
         if START not in idx or END not in idx:
             print("MISSING: OF-AI markers in index.html")
             ok = False
@@ -393,26 +453,33 @@ def main(check_only: bool = False) -> int:
             m = re.search(re.escape(START) + r"(.*?)" + re.escape(END), idx, flags=re.S)
             expected = ai_html.strip()
             block = m.group(0).strip() if m else ""
-            # Strip Last Updated clock from both for comparison
+
             def strip_clock(s: str) -> str:
                 return re.sub(
                     r"Last Updated \d{4}-\d{2}-\d{2} \d{2}:\d{2} Malaysia time \(UTC\+8\)",
                     "Last Updated <CLOCK>",
                     s,
                 )
+
             if strip_clock(block) != strip_clock(expected):
                 print("STALE: index.html AI layer does not match days.json")
                 ok = False
+            if not revision_present(idx, rev_id):
+                print("STALE: index.html missing fieldRevision", rev_id)
+                ok = False
+
         if not ok:
             print("Run: python3 scripts/sync-ai-layer.py")
             return 2
-        print("OK: AI layers in sync with days.json")
+        print("OK: AI layers in sync with days.json · fieldRevision", rev_id)
         return 0
 
+    REV.write_text(rev_json, encoding="utf-8")
     SNAP.write_text(snap, encoding="utf-8")
     inject_index(ai_html)
     inject_marked(ABOUT, STATUS_START, STATUS_END, status_html)
     inject_marked(ABOUT, ROSTER_START, ROSTER_END, roster_html)
+    print("Wrote", REV.relative_to(ROOT), "fieldRevision=", rev_id)
     print("Wrote", SNAP.relative_to(ROOT))
     print("Updated AI layer in", INDEX.relative_to(ROOT))
     print("Updated Field status + roster in", ABOUT.relative_to(ROOT))
