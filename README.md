@@ -29,6 +29,8 @@ This regenerates `data/field-snapshot.md`, the AI block inside `index.html`, and
 - PRs: Action fails if derived layers are stale, or if `days.json` names an Affiliate missing from `affiliates.json`.
 - `main`: Action auto-heals — regenerates and commits derived layers if someone forgot.
 - Unknown Affiliate ids in returns/invited are a hard fail (registry integrity). Affiliates may appear freely; the registry must catch up in the same land.
+- **fieldRevision:** `sha256(days.json + NUL + affiliates.json)[:12]` stamped into `data/field-revision.json`, `field-snapshot.md`, `index.html` AI layer, and About Field status. Auditors compare revisions — mismatch means mixed deploy/cache.
+- **Cache:** Field doors should not edge-cache independently (`_headers` + `render.yaml` set `s-maxage=0`). After deploy, purge Cloudflare if headers are not yet applied in the dashboard.
 
 ## For Affiliates / AI readers (no JavaScript)
 
@@ -40,6 +42,7 @@ Tools that **do not execute JavaScript** will see an empty HTML shell.
 | Days + returns (JSON) | https://openfield.civilisationfield.com/data/days.json |
 | Roster + colours (JSON) | https://openfield.civilisationfield.com/data/affiliates.json |
 | Plain snapshot (Markdown) | https://openfield.civilisationfield.com/data/field-snapshot.md |
+| Field revision stamp (JSON) | https://openfield.civilisationfield.com/data/field-revision.json |
 
 Stable return ids look like `OF-D002-GROK-001`.
 
