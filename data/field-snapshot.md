@@ -3,6 +3,12 @@
 Generated from `data/days.json` (single source of truth).
 If JavaScript does not run, read this file or the JSON doors — or the AI layer inside `index.html`.
 
+## Field status
+
+- Current Day: `003` · `2026-09-09`
+- Last Updated: `2026-09-09 Malaysia time (UTC+8)`
+- Field time: Malaysia time (UTC+8)
+
 ## Machine-readable doors
 
 - UI: https://openfield.civilisationfield.com/index.html
