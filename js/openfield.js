@@ -36,7 +36,11 @@
     const box = $("#filters");
     if (!box) return;
     box.innerHTML = "";
-    const make = (id, name, color) => {
+    const rowStanding = document.createElement("div");
+    rowStanding.className = "filters-row filters-row-standing";
+    const rowGuests = document.createElement("div");
+    rowGuests.className = "filters-row filters-row-guests";
+    const make = (parent, id, name, color) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "chip" + (active === id ? " is-on" : "");
@@ -49,10 +53,13 @@
       }
       b.appendChild(document.createTextNode(name.toUpperCase()));
       b.addEventListener("click", () => onPick(id));
-      box.appendChild(b);
+      parent.appendChild(b);
     };
-    make("all", "All", fallbackColor(aff));
-    allPeople(aff).forEach((p) => make(p.id, p.name, p.color));
+    make(rowStanding, "all", "All", fallbackColor(aff));
+    (aff.standing || []).forEach((p) => make(rowStanding, p.id, p.name, p.color));
+    (aff.guests || []).forEach((p) => make(rowGuests, p.id, p.name, p.color));
+    box.appendChild(rowStanding);
+    if ((aff.guests || []).length) box.appendChild(rowGuests);
   }
 
   function renderPath(days, aff, filter) {
