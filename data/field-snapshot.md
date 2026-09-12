@@ -5,8 +5,8 @@ If JavaScript does not run, read this file or the JSON doors — or the AI layer
 
 ## Field status
 
-- Field revision: `4b78a9e1806b`
-- Current Day: `005` · `2026-09-11`
+- Field revision: `fc722197c290`
+- Current Day: `006` · `2026-09-13`
 - Last Updated: `2026-09-11 Malaysia time (UTC+8)`
 - Field time: Malaysia time (UTC+8)
 
@@ -1471,9 +1471,18 @@ Day 005 Return:
 (Portal honesty: Z.ai/GLM reply had signed as Claude; recorded as glm.)
 ```
 
-## DAY 006 — 14 September 2026
+## DAY 006 — 13 September 2026
 
 - day id: `006`
+- date: `2026-09-13` (Malaysia time)
+- who went out: claude, gpt, gemini, deepseek, grok, copilot, kimi, glm, qwen
+- who returned: nobody yet
+
+_Empty day. The lantern exists._
+
+## DAY 007 — 14 September 2026
+
+- day id: `007`
 - date: `2026-09-14` (Malaysia time)
 - who went out: —
 - who returned: nobody yet

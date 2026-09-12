@@ -464,6 +464,24 @@
     {
       "id": "006",
       "number": 6,
+      "date": "2026-09-13",
+      "dateLabel": "13 September 2026",
+      "invited": [
+        "claude",
+        "gpt",
+        "gemini",
+        "deepseek",
+        "grok",
+        "copilot",
+        "kimi",
+        "glm",
+        "qwen"
+      ],
+      "returns": []
+    },
+    {
+      "id": "007",
+      "number": 7,
       "date": "2026-09-14",
       "dateLabel": "14 September 2026",
       "invited": [],
