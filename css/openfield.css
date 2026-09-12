@@ -6,6 +6,7 @@
   --muted: #8a8680;
   --line: rgba(240, 220, 180, 0.18);
   --gold: #FFD700;
+  --chief: #C9853A;
   --lantern: #f6e7b2;
   --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", "Noto Serif CJK SC", serif;
   --font-sans: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Noto Sans CJK SC", sans-serif;
@@ -170,7 +171,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: flex-end;
   gap: .14rem;
-  min-height: 1.15rem;
+  min-height: 1.7rem;
   margin-bottom: .35rem;
 }
 .lantern .dots-row {
@@ -301,9 +302,21 @@ a { color: inherit; text-decoration: none; }
   outline: 1px dashed rgba(232, 228, 220, 0.55);
   outline-offset: 1px;
 }
+.dot.is-keeper,
+.dots span.is-keeper {
+  outline: 1px solid color-mix(in srgb, var(--c, var(--chief)) 80%, white);
+  outline-offset: 1px;
+  box-shadow: 0 0 8px var(--c, var(--chief));
+}
 .card.is-guest {
   opacity: 0.92;
   border-style: dashed;
+}
+.card.is-keeper {
+  border-left-color: var(--c, var(--chief));
+}
+.chip.is-keeper {
+  letter-spacing: .1em;
 }
 .chip[data-id] .dot.is-guest { /* reserved */ }
 
@@ -405,6 +418,25 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
 }
 .about-metaphor { margin: .9rem 0 0; }
+.about-keeper-block {
+  margin: 1.6rem 0 0;
+  text-align: center;
+}
+.about-keeper {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+  letter-spacing: .04em;
+  line-height: 1.9;
+  color: var(--ink);
+}
+.about-keeper-label {
+  font-family: var(--font-sans);
+  font-size: .78rem;
+  letter-spacing: .12em;
+  color: var(--chief);
+  font-weight: 500;
+}
 .about .names {
   margin-top: 2rem;
   font-family: var(--font-sans);

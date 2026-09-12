@@ -8,8 +8,26 @@
     return res.json();
   }
 
-  function allPeople(aff) {
+  function keeperPerson(aff) {
+    const k = aff && aff.keeper;
+    if (!k) return null;
+    return {
+      id: k.id || "chief",
+      name: k.role || "Chief",
+      fullName: k.name || "Grok Bot",
+      color: k.color || "#C9853A",
+      label: k.label || "守燈",
+      keeper: true,
+    };
+  }
+
+  function rosterPeople(aff) {
     return [...(aff.standing || []), ...(aff.guests || [])];
+  }
+
+  function allPeople(aff) {
+    const k = keeperPerson(aff);
+    return [...rosterPeople(aff), ...(k ? [k] : [])];
   }
 
   function personById(aff, id) {
@@ -28,6 +46,26 @@
     return (p && p.color) || fallbackColor(aff);
   }
 
+  function returnIdentity(aff, r) {
+    const k = keeperPerson(aff);
+    if (k && (r.affiliate === k.id || (r.affiliate === "tuzi" && r.keyword === "Chief"))) {
+      return k;
+    }
+    return personById(aff, r.affiliate);
+  }
+
+  function returnMatchesPerson(aff, r, id) {
+    const ident = returnIdentity(aff, r);
+    return !!(ident && ident.id === id);
+  }
+
+  function roleSuffix(p) {
+    if (!p) return "";
+    if (p.keeper) return " · 守燈";
+    if (p.guest) return " · GUEST";
+    return "";
+  }
+
   function returnIds(day) {
     return (day.returns || []).map((r) => r.affiliate);
   }
@@ -40,15 +78,16 @@
     rowStanding.className = "filters-row filters-row-standing";
     const rowGuests = document.createElement("div");
     rowGuests.className = "filters-row filters-row-guests";
-    const make = (parent, id, name, color) => {
+    const make = (parent, id, name, color, kind) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "chip" + (active === id ? " is-on" : "");
+      b.className = "chip" + (active === id ? " is-on" : "") + (kind === "keeper" ? " is-keeper" : "");
       b.style.setProperty("--c", color || fallbackColor(aff));
       b.dataset.id = id;
+      if (kind) b.dataset.kind = kind;
       if (id !== "all") {
         const d = document.createElement("span");
-        d.className = "dot";
+        d.className = "dot" + (kind === "keeper" ? " is-keeper" : "");
         b.appendChild(d);
       }
       b.appendChild(document.createTextNode(name.toUpperCase()));
@@ -57,9 +96,11 @@
     };
     make(rowStanding, "all", "All", fallbackColor(aff));
     (aff.standing || []).forEach((p) => make(rowStanding, p.id, p.name, p.color));
-    (aff.guests || []).forEach((p) => make(rowGuests, p.id, p.name, p.color));
+    (aff.guests || []).forEach((p) => make(rowGuests, p.id, p.name, p.color, "guest"));
+    const k = keeperPerson(aff);
+    if (k) make(rowGuests, k.id, k.name, k.color, "keeper");
     box.appendChild(rowStanding);
-    if ((aff.guests || []).length) box.appendChild(rowGuests);
+    if ((aff.guests || []).length || k) box.appendChild(rowGuests);
   }
 
   function renderPath(days, aff, filter) {
@@ -67,29 +108,41 @@
     if (!path) return;
     path.innerHTML = "";
     days.forEach((day) => {
-      const ids = returnIds(day);
-      const match = filter === "all" || ids.includes(filter);
+      const rets = day.returns || [];
+      const match = filter === "all" || rets.some((r) => returnMatchesPerson(aff, r, filter));
       const el = document.createElement("div");
-      el.className = "lantern" + (ids.length ? "" : " is-empty") + (match ? " is-focus" : " is-dim");
+      el.className = "lantern" + (rets.length ? "" : " is-empty") + (match ? " is-focus" : " is-dim");
       const href = "day.html?d=" + encodeURIComponent(day.id);
-      const mark = (id) => {
-        const p = personById(aff, id);
-        if (!p) return { guest: false, html: `<span style="--c:${fallbackColor(aff)}" title="${id}"></span>` };
+      const mark = (r) => {
+        const p = returnIdentity(aff, r);
+        if (!p) {
+          return { row: "standing", html: `<span style="--c:${fallbackColor(aff)}" title="${r.affiliate}"></span>` };
+        }
+        if (p.keeper) {
+          return {
+            row: "keeper",
+            html: `<span class="is-keeper" style="--c:${colorOf(aff, p)}" title="${p.name} · 守燈"></span>`,
+          };
+        }
         const guestCls = p.guest ? " is-guest" : "";
         return {
-          guest: !!p.guest,
+          row: p.guest ? "guest" : "standing",
           html: `<span class="${guestCls.trim()}" style="--c:${colorOf(aff, p)}" title="${p.name}${p.guest ? " (guest)" : ""}"></span>`,
         };
       };
       const standingDots = [];
       const guestDots = [];
-      ids.forEach((id) => {
-        const m = mark(id);
-        (m.guest ? guestDots : standingDots).push(m.html);
+      const keeperDots = [];
+      rets.forEach((r) => {
+        const m = mark(r);
+        if (m.row === "keeper") keeperDots.push(m.html);
+        else if (m.row === "guest") guestDots.push(m.html);
+        else standingDots.push(m.html);
       });
-      const dotsHtml = ids.length
+      const dotsHtml = rets.length
         ? `<div class="dots-row dots-row-standing">${standingDots.join("") || "&nbsp;"}</div>` +
-          (guestDots.length ? `<div class="dots-row dots-row-guests">${guestDots.join("")}</div>` : "")
+          `<div class="dots-row dots-row-guests">${guestDots.join("") || "&nbsp;"}</div>` +
+          `<div class="dots-row dots-row-keeper">${keeperDots.join("") || "&nbsp;"}</div>`
         : "&nbsp;";
       el.innerHTML = `
         <a href="${href}">
@@ -104,15 +157,15 @@
   }
 
   function fillReturnCard(card, aff, day, r) {
-    const p = personById(aff, r.affiliate);
-    card.className = "card" + (p?.guest ? " is-guest" : "");
+    const p = returnIdentity(aff, r);
+    card.className = "card" + (p?.guest ? " is-guest" : "") + (p?.keeper ? " is-keeper" : "");
     card.style.setProperty("--c", colorOf(aff, p));
     if (r.id) card.dataset.returnId = r.id;
     const dayLabel = day ? `DAY ${String(day.number).padStart(3, "0")}` : "";
     const dayHref = day ? `day.html?d=${encodeURIComponent(day.id)}` : "#";
     card.innerHTML = `
       <div class="who-line">
-        <span class="name">${(p?.name || r.affiliate).toUpperCase()}${p?.guest ? " · GUEST" : ""}</span>
+        <span class="name">${(p?.name || r.affiliate).toUpperCase()}${roleSuffix(p)}</span>
         ${r.id ? `<span class="kw rid">${r.id}</span>` : ""}
         ${day ? `<a class="kw daylink" href="${dayHref}">${dayLabel}</a>` : ""}
         ${r.keyword ? `<span class="kw">${r.keyword}</span>` : ""}
@@ -134,7 +187,7 @@
     if (title) title.textContent = "DAY " + String(day.number).padStart(3, "0");
     if (meta) meta.textContent = day.dateLabel || day.date;
     const invited = (day.invited || []).map((id) => personById(aff, id)?.name || id);
-    const returned = returnIds(day).map((id) => personById(aff, id)?.name || id);
+    const returned = (day.returns || []).map((r) => (returnIdentity(aff, r)?.name || r.affiliate));
     if (who) {
       who.innerHTML = `<div><strong>Who went out?</strong> ${invited.length ? invited.join(" · ") : "—"}</div>
         <div><strong>Who returned?</strong> ${returned.length ? returned.join(" · ") : "Nobody returned."}</div>`;
@@ -218,9 +271,12 @@
       return;
     }
     const p = personById(aff, filter);
-    const title = (p?.name || filter).toUpperCase() + (p?.guest ? " · GUEST" : "");
-    const items = collectReturns(days, (_day, r) => r.affiliate === filter);
-    showReturnList(aff, title, "No returns from this Affiliate yet.", items);
+    const title = (p?.name || filter).toUpperCase() + roleSuffix(p);
+    const items = collectReturns(days, (_day, r) => returnMatchesPerson(aff, r, filter));
+    const empty = p?.keeper
+      ? "No returns from the lantern keeper yet."
+      : "No returns from this Affiliate yet.";
+    showReturnList(aff, title, empty, items);
   }
 
   function renderFormReturns(days, aff, form) {
@@ -257,7 +313,9 @@
     const formMap = {};
     days.forEach((day) => {
       (day.returns || []).forEach((r) => {
-        (affMap[r.affiliate] ||= []).push({ day, r });
+        const ident = returnIdentity(aff, r);
+        const key = (ident && ident.id) || r.affiliate;
+        (affMap[key] ||= []).push({ day, r });
         const m = (r.date || day.date || "").slice(0, 7);
         if (m) (monthMap[m] ||= []).push({ day, r });
         const f = (r.form || "Words").toLowerCase();
@@ -268,8 +326,10 @@
     byAff.innerHTML = "";
     allPeople(aff).forEach((p) => {
       const n = (affMap[p.id] || []).length;
+      const extra = p.guest ? " (guest)" : p.keeper ? " (守燈)" : "";
+      const dotCls = p.guest ? " is-guest" : p.keeper ? " is-keeper" : "";
       const li = document.createElement("li");
-      li.innerHTML = `<a href="index.html?filter=${p.id}"><span class="dot${p.guest ? " is-guest" : ""}" style="--c:${colorOf(aff, p)}"></span>${p.name}${p.guest ? " (guest)" : ""} — ${n} return${n === 1 ? "" : "s"}</a>`;
+      li.innerHTML = `<a href="index.html?filter=${p.id}"><span class="dot${dotCls}" style="--c:${colorOf(aff, p)}"></span>${p.name}${extra} — ${n} return${n === 1 ? "" : "s"}</a>`;
       byAff.appendChild(li);
     });
 

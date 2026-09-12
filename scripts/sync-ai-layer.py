@@ -69,8 +69,36 @@ def compute_revision() -> dict:
     }
 
 
+def keeper_record(aff) -> dict | None:
+    """Dedicated 守燈 identity — not standing/guest. Traditional 燈, not 灯."""
+    k = aff.get("keeper") or {}
+    kid = k.get("id") or "chief"
+    return {
+        "id": kid,
+        "name": k.get("role") or "Chief",
+        "fullName": k.get("name") or "Grok Bot",
+        "color": k.get("color") or "#C9853A",
+        "label": k.get("label") or "守燈",
+        "role": k.get("role") or "Chief",
+        "keeper": True,
+    }
+
+
+def keeper_display(aff) -> str:
+    """Public lantern-keeper line. Not an Affiliate id — dedicated keeper label.
+
+    Traditional 燈 (not simplified 灯). Default: 守燈: Grok Bot (Chief)
+    """
+    k = keeper_record(aff)
+    return f"{k['label']}: {k['fullName']} ({k['role']})"
+
+
 def people_map(aff):
-    return {p["id"]: p for p in (aff.get("standing") or []) + (aff.get("guests") or [])}
+    people = {p["id"]: p for p in (aff.get("standing") or []) + (aff.get("guests") or [])}
+    k = keeper_record(aff)
+    if k and k.get("id"):
+        people[k["id"]] = k
+    return people
 
 
 def affiliate_ids_in_days(days_doc) -> set[str]:
@@ -163,6 +191,7 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
         "",
         "Standing: " + " · ".join(p["name"] for p in aff.get("standing") or []),
         "Guests: " + " · ".join(p["name"] for p in aff.get("guests") or []),
+        keeper_display(aff),
         "",
     ]
     for day in days_doc.get("days") or []:
@@ -184,11 +213,13 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
             continue
         for r in rets:
             p = people.get(r["affiliate"], {})
-            guest = " · GUEST" if p.get("guest") else ""
+            if r.get("affiliate") == "tuzi" and r.get("keyword") == "Chief":
+                p = people.get("chief") or keeper_record(aff)
+            mark = " · 守燈" if p.get("keeper") else (" · GUEST" if p.get("guest") else "")
             L += [
                 f"### {r.get('id', '(no id)')}",
                 "",
-                f"- affiliate: **{p.get('name', r['affiliate'])}** (`{r['affiliate']}`){guest}",
+                f"- affiliate: **{p.get('name', r['affiliate'])}** (`{r.get('affiliate')}`){mark}",
             ]
             if p.get("color"):
                 L.append(f"- colour: `{p['color']}`")
@@ -225,7 +256,8 @@ def build_ai_html(days_doc, aff, rev: dict) -> str:
     standing = " · ".join(p["name"] for p in aff.get("standing") or [])
     guests = " · ".join(p["name"] for p in aff.get("guests") or [])
     parts.append(f"<p><strong>Standing:</strong> {html.escape(standing)}<br>")
-    parts.append(f"<strong>Guests:</strong> {html.escape(guests)}</p>")
+    parts.append(f"<strong>Guests:</strong> {html.escape(guests)}<br>")
+    parts.append(f"<strong>{html.escape(keeper_display(aff))}</strong></p>")
 
     for day in days_doc.get("days") or []:
         num = str(day["number"]).zfill(3)
@@ -240,13 +272,15 @@ def build_ai_html(days_doc, aff, rev: dict) -> str:
             parts.append(f"<p>Who returned: {html.escape(who)}</p>")
             for r in rets:
                 p = people.get(r["affiliate"], {})
+                if r.get("affiliate") == "tuzi" and r.get("keyword") == "Chief":
+                    p = people.get("chief") or keeper_record(aff)
                 name = html.escape(p.get("name") or r["affiliate"])
                 rid = html.escape(r.get("id") or "")
                 form = html.escape(str(r.get("form") or ""))
                 kw = html.escape(str(r.get("keyword") or ""))
                 date = html.escape(str(r.get("date") or day.get("date") or ""))
                 color = html.escape(str(p.get("color") or ""))
-                guest = " GUEST" if p.get("guest") else ""
+                guest = " 守燈" if p.get("keeper") else (" GUEST" if p.get("guest") else "")
                 body = html.escape(r.get("body") or "")
                 parts.append(
                     f'<section class="ai-return" data-return-id="{rid}" data-affiliate="{html.escape(r["affiliate"])}">'
@@ -307,9 +341,20 @@ def build_about_roster_html(aff) -> str:
             return "        <li>—</li>"
         return "\n".join(f"        <li>{html.escape(p['name'])}</li>" for p in people)
 
+    k = keeper_record(aff)
+    label = html.escape(k["label"])
+    full = html.escape(k["fullName"])
+    role = html.escape(k["role"])
+    keeper_html = (
+        f'  <p class="about-keeper"><span class="about-keeper-label">{label}</span>: {full} ({role})</p>'
+    )
+
     return "\n".join(
         [
             ROSTER_START,
+            '<section class="about-keeper-block" aria-label="Lantern keeper">',
+            keeper_html,
+            "</section>",
             '<section class="names" aria-labelledby="standing-affiliates">',
             '  <h2 id="standing-affiliates" class="about-h-sm">Standing Affiliates</h2>',
             '  <ul class="about-roster">',
@@ -381,7 +426,7 @@ def main(check_only: bool = False) -> int:
             file=sys.stderr,
         )
         print(
-            "Add them to data/affiliates.json (standing or guests) then re-run sync.",
+            "Add them to data/affiliates.json (standing, guests, or keeper) then re-run sync.",
             file=sys.stderr,
         )
         return 3
@@ -434,6 +479,24 @@ def main(check_only: bool = False) -> int:
                     print(f"STALE: about.html roster missing {p['name']}")
                     ok = False
                     break
+            keeper_line = keeper_display(aff)
+            k = keeper_record(aff)
+            about_keeper = (
+                f'<span class="about-keeper-label">{html.escape(k["label"])}</span>: '
+                f'{html.escape(k["fullName"])} ({html.escape(k["role"])})'
+            )
+            if about_keeper not in about:
+                print("STALE: about.html missing keeper line", keeper_line)
+                ok = False
+            if "灯" in k["label"]:
+                print("STALE: keeper label must use traditional 燈, not simplified 灯")
+                ok = False
+            if keeper_line not in snap_text:
+                print("STALE: field-snapshot.md missing keeper line", keeper_line)
+                ok = False
+            if html.escape(keeper_line) not in idx and keeper_line not in idx:
+                print("STALE: index.html AI layer missing keeper line", keeper_line)
+                ok = False
 
         if not SNAP.exists():
             print("MISSING: data/field-snapshot.md")

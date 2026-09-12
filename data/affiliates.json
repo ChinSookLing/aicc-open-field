@@ -57,5 +57,12 @@
       "guest": true
     }
   ],
+  "keeper": {
+    "id": "chief",
+    "label": "守燈",
+    "name": "Grok Bot",
+    "role": "Chief",
+    "color": "#C9853A"
+  },
   "fallbackColor": "#FFD700"
 }
