@@ -93,6 +93,15 @@ def keeper_display(aff) -> str:
     return f"{k['label']}: {k['fullName']} ({k['role']})"
 
 
+def order_returns(aff, rets: list) -> list:
+    """Affiliate/guest/Tuzi process first; Chief explorative notes always last."""
+    k = keeper_record(aff)
+    kid = k["id"] if k else "chief"
+    walkers = [r for r in (rets or []) if r.get("affiliate") != kid]
+    keepers = [r for r in (rets or []) if r.get("affiliate") == kid]
+    return walkers + keepers
+
+
 def people_map(aff):
     people = {p["id"]: p for p in (aff.get("standing") or []) + (aff.get("guests") or [])}
     k = keeper_record(aff)
@@ -191,8 +200,9 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
         "",
         "Standing: " + " · ".join(p["name"] for p in aff.get("standing") or []),
         "Guests: " + " · ".join(p["name"] for p in aff.get("guests") or []),
-        keeper_display(aff),
-        "Tuzi returns are process chronicle (gold #FFD700). Chief explorative records use affiliate `chief` and light the Night Path lantern (#C9853A).",
+        keeper_display(aff) + " · colour `#C9853A` · not standing, not guest.",
+        "Tuzi returns are process chronicle (gold `#FFD700`) and never light the lantern.",
+        "Chief explorative records use affiliate `chief`, sort last on the day, and light the Night Path lantern amber. Empty/dark lanterns are allowed.",
         "",
     ]
     for day in days_doc.get("days") or []:
@@ -203,7 +213,7 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
             f"- date: `{day['date']}` (Malaysia time)",
         ]
         invited = day.get("invited") or []
-        rets = day.get("returns") or []
+        rets = order_returns(aff, day.get("returns") or [])
         L += [
             f"- who went out: {', '.join(invited) if invited else '—'}",
             f"- who returned: {', '.join(r['affiliate'] for r in rets) if rets else 'nobody yet'}",
@@ -254,14 +264,21 @@ def build_ai_html(days_doc, aff, rev: dict) -> str:
     ]
     standing = " · ".join(p["name"] for p in aff.get("standing") or [])
     guests = " · ".join(p["name"] for p in aff.get("guests") or [])
+    k = keeper_record(aff)
     parts.append(f"<p><strong>Standing:</strong> {html.escape(standing)}<br>")
-    parts.append(f"<strong>Guests:</strong> {html.escape(guests)}<br>")
-    parts.append(f"<strong>{html.escape(keeper_display(aff))}</strong></p>")
+    parts.append(f"<strong>Guests:</strong> {html.escape(guests)}</p>")
+    parts.append(
+        f"<p><strong>{html.escape(keeper_display(aff))}</strong> · colour "
+        f"<code>{html.escape(k['color'])}</code> · not a standing or guest Affiliate. "
+        "Explorative records use affiliate <code>chief</code>, sort last on the day, "
+        "and light the Night Path lantern. Empty/dark lanterns are allowed. "
+        "Tuzi process notes stay <code>tuzi</code> (gold <code>#FFD700</code>).</p>"
+    )
 
     for day in days_doc.get("days") or []:
         num = str(day["number"]).zfill(3)
         label = html.escape(str(day.get("dateLabel") or day.get("date") or ""))
-        rets = day.get("returns") or []
+        rets = order_returns(aff, day.get("returns") or [])
         parts.append(f'<article class="ai-day" data-day="{html.escape(day["id"])}">')
         parts.append(f"<h3>DAY {num} — {label}</h3>")
         if not rets:
@@ -493,6 +510,9 @@ def main(check_only: bool = False) -> int:
                 ok = False
             if html.escape(keeper_line) not in idx and keeper_line not in idx:
                 print("STALE: index.html AI layer missing keeper line", keeper_line)
+                ok = False
+            if "#C9853A" not in idx or "not a standing or guest Affiliate" not in idx:
+                print("STALE: index.html AI layer missing keeper colour / non-affiliate note")
                 ok = False
 
         if not SNAP.exists():

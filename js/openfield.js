@@ -51,6 +51,13 @@
     return !!(k && r && r.affiliate === k.id);
   }
 
+  function orderReturns(aff, rets) {
+    const walkers = [];
+    const keepers = [];
+    (rets || []).forEach((r) => (isKeeperReturn(aff, r) ? keepers : walkers).push(r));
+    return walkers.concat(keepers);
+  }
+
   function returnIdentity(aff, r) {
     return personById(aff, r.affiliate);
   }
@@ -183,27 +190,28 @@
     if (title) title.textContent = "DAY " + String(day.number).padStart(3, "0");
     if (meta) meta.textContent = day.dateLabel || day.date;
     const invited = (day.invited || []).map((id) => personById(aff, id)?.name || id);
-    const returned = (day.returns || []).map((r) => (returnIdentity(aff, r)?.name || r.affiliate));
+    const ordered = orderReturns(aff, day.returns || []);
+    const returned = ordered.map((r) => (returnIdentity(aff, r)?.name || r.affiliate));
     if (who) {
       who.innerHTML = `<div><strong>Who went out?</strong> ${invited.length ? invited.join(" · ") : "—"}</div>
         <div><strong>Who returned?</strong> ${returned.length ? returned.join(" · ") : "Nobody returned."}</div>`;
     }
     box.innerHTML = "";
-    if (!(day.returns || []).length) {
+    if (!ordered.length) {
       box.innerHTML = `<div class="empty-day">The day exists.<br>Nobody returned yet.</div>`;
       return;
     }
-    day.returns.forEach((r) => {
+    ordered.forEach((r) => {
       const card = document.createElement("article");
       fillReturnCard(card, aff, day, r);
       box.appendChild(card);
     });
   }
 
-  function collectReturns(days, pred) {
+  function collectReturns(days, pred, aff) {
     const items = [];
     days.forEach((day) => {
-      (day.returns || []).forEach((r) => {
+      orderReturns(aff, day.returns || []).forEach((r) => {
         if (pred(day, r)) items.push({ day, r });
       });
     });
@@ -268,7 +276,7 @@
     }
     const p = personById(aff, filter);
     const title = (p?.name || filter).toUpperCase() + roleSuffix(p);
-    const items = collectReturns(days, (_day, r) => returnMatchesPerson(aff, r, filter));
+    const items = collectReturns(days, (_day, r) => returnMatchesPerson(aff, r, filter), aff);
     const empty = p?.keeper
       ? "No explorative record from the lantern keeper yet."
       : "No returns from this Affiliate yet.";
@@ -279,7 +287,8 @@
     const key = (form || "").toLowerCase();
     const items = collectReturns(
       days,
-      (_day, r) => ((r.form || "Words").toLowerCase() === key)
+      (_day, r) => ((r.form || "Words").toLowerCase() === key),
+      aff
     );
     const title = "FORM · " + key.toUpperCase();
     showReturnList(aff, title, "No returns in this form yet.", items);
@@ -288,7 +297,8 @@
   function renderDateReturns(days, aff, date) {
     const items = collectReturns(
       days,
-      (day, r) => (r.date || day.date) === date
+      (day, r) => (r.date || day.date) === date,
+      aff
     );
     const day = days.find((d) => d.date === date);
     const title = day
@@ -391,8 +401,10 @@
           renderDateReturns(days, aff, date);
         } else if (mode === "month") {
           renderPath(days, aff, "all");
-          const items = collectReturns(days, (day, r) =>
-            ((r.date || day.date || "").slice(0, 7) === month)
+          const items = collectReturns(
+            days,
+            (day, r) => ((r.date || day.date || "").slice(0, 7) === month),
+            aff
           );
           showReturnList(
             aff,
