@@ -6,6 +6,7 @@
   --muted: #8a8680;
   --line: rgba(240, 220, 180, 0.18);
   --gold: #FFD700;
+  --chief: #C9853A;
   --lantern: #f6e7b2;
   --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", "Noto Serif CJK SC", serif;
   --font-sans: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Noto Sans CJK SC", sans-serif;
@@ -148,6 +149,14 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 10px rgba(255,255,255,.08);
   opacity: .55;
 }
+.lantern.is-chief .flame {
+  background: radial-gradient(circle at 40% 35%, #f8e6c8, var(--chief) 48%, #8a4f1a 100%);
+  box-shadow: 0 0 18px rgba(201, 133, 58, .65), 0 0 40px rgba(201, 133, 58, .28);
+  opacity: 1;
+}
+.lantern.is-chief .pole {
+  background: linear-gradient(180deg, rgba(201, 133, 58, .8), rgba(201, 133, 58, .05));
+}
 .lantern .pole {
   width: 2px; height: 2.2rem;
   margin: 0 auto;
@@ -185,8 +194,8 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 6px var(--c);
 }
 .lantern.is-dim { opacity: .28; filter: grayscale(.4); }
-.lantern.is-focus .flame {
-  box-shadow: 0 0 22px rgba(240, 194, 75, .85), 0 0 50px rgba(240, 194, 75, .35);
+.lantern.is-chief.is-focus .flame {
+  box-shadow: 0 0 22px rgba(201, 133, 58, .9), 0 0 50px rgba(201, 133, 58, .4);
 }
 
 .blurb {
@@ -301,9 +310,21 @@ a { color: inherit; text-decoration: none; }
   outline: 1px dashed rgba(232, 228, 220, 0.55);
   outline-offset: 1px;
 }
+.dot.is-keeper,
+.dots span.is-keeper {
+  outline: 1px solid color-mix(in srgb, var(--c, var(--chief)) 80%, white);
+  outline-offset: 1px;
+  box-shadow: 0 0 8px var(--c, var(--chief));
+}
 .card.is-guest {
   opacity: 0.92;
   border-style: dashed;
+}
+.card.is-keeper {
+  border-left-color: var(--c, var(--chief));
+}
+.chip.is-keeper {
+  letter-spacing: .1em;
 }
 .chip[data-id] .dot.is-guest { /* reserved */ }
 
@@ -405,6 +426,25 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
 }
 .about-metaphor { margin: .9rem 0 0; }
+.about-keeper-block {
+  margin: 1.6rem 0 0;
+  text-align: center;
+}
+.about-keeper {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+  letter-spacing: .04em;
+  line-height: 1.9;
+  color: var(--ink);
+}
+.about-keeper-label {
+  font-family: var(--font-sans);
+  font-size: .78rem;
+  letter-spacing: .12em;
+  color: var(--chief);
+  font-weight: 500;
+}
 .about .names {
   margin-top: 2rem;
   font-family: var(--font-sans);
