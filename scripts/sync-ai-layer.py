@@ -192,6 +192,7 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
         "Standing: " + " · ".join(p["name"] for p in aff.get("standing") or []),
         "Guests: " + " · ".join(p["name"] for p in aff.get("guests") or []),
         keeper_display(aff),
+        "Tuzi returns are process chronicle (gold #FFD700). Chief explorative records use affiliate `chief` and light the Night Path lantern (#C9853A).",
         "",
     ]
     for day in days_doc.get("days") or []:
@@ -213,8 +214,6 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
             continue
         for r in rets:
             p = people.get(r["affiliate"], {})
-            if r.get("affiliate") == "tuzi" and r.get("keyword") == "Chief":
-                p = people.get("chief") or keeper_record(aff)
             mark = " · 守燈" if p.get("keeper") else (" · GUEST" if p.get("guest") else "")
             L += [
                 f"### {r.get('id', '(no id)')}",
@@ -272,8 +271,6 @@ def build_ai_html(days_doc, aff, rev: dict) -> str:
             parts.append(f"<p>Who returned: {html.escape(who)}</p>")
             for r in rets:
                 p = people.get(r["affiliate"], {})
-                if r.get("affiliate") == "tuzi" and r.get("keyword") == "Chief":
-                    p = people.get("chief") or keeper_record(aff)
                 name = html.escape(p.get("name") or r["affiliate"])
                 rid = html.escape(r.get("id") or "")
                 form = html.escape(str(r.get("form") or ""))

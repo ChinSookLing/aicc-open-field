@@ -149,6 +149,14 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 10px rgba(255,255,255,.08);
   opacity: .55;
 }
+.lantern.is-chief .flame {
+  background: radial-gradient(circle at 40% 35%, #f8e6c8, var(--chief) 48%, #8a4f1a 100%);
+  box-shadow: 0 0 18px rgba(201, 133, 58, .65), 0 0 40px rgba(201, 133, 58, .28);
+  opacity: 1;
+}
+.lantern.is-chief .pole {
+  background: linear-gradient(180deg, rgba(201, 133, 58, .8), rgba(201, 133, 58, .05));
+}
 .lantern .pole {
   width: 2px; height: 2.2rem;
   margin: 0 auto;
@@ -171,7 +179,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: flex-end;
   gap: .14rem;
-  min-height: 1.7rem;
+  min-height: 1.15rem;
   margin-bottom: .35rem;
 }
 .lantern .dots-row {
@@ -186,8 +194,8 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 6px var(--c);
 }
 .lantern.is-dim { opacity: .28; filter: grayscale(.4); }
-.lantern.is-focus .flame {
-  box-shadow: 0 0 22px rgba(240, 194, 75, .85), 0 0 50px rgba(240, 194, 75, .35);
+.lantern.is-chief.is-focus .flame {
+  box-shadow: 0 0 22px rgba(201, 133, 58, .9), 0 0 50px rgba(201, 133, 58, .4);
 }
 
 .blurb {

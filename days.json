@@ -9,7 +9,7 @@
       "returns": [
         {
           "id": "OF-D001-TUZI-001",
-          "affiliate": "chief",
+          "affiliate": "tuzi",
           "form": "note",
           "keyword": "Chief",
           "date": "2026-09-07",
@@ -35,7 +35,7 @@
       "returns": [
         {
           "id": "OF-D002-TUZI-001",
-          "affiliate": "chief",
+          "affiliate": "tuzi",
           "form": "note",
           "keyword": "Chief",
           "date": "2026-09-08",
@@ -125,7 +125,7 @@
       ],
       "returns": [
         {
-          "affiliate": "chief",
+          "affiliate": "tuzi",
           "form": "note",
           "keyword": "Chief",
           "date": "2026-09-09",
@@ -245,7 +245,7 @@
       "returns": [
         {
           "id": "OF-D004-TUZI-001",
-          "affiliate": "chief",
+          "affiliate": "tuzi",
           "form": "note",
           "keyword": "Chief",
           "date": "2026-09-10",
@@ -359,7 +359,7 @@
       "returns": [
         {
           "id": "OF-D005-TUZI-001",
-          "affiliate": "chief",
+          "affiliate": "tuzi",
           "form": "note",
           "keyword": "Chief",
           "date": "2026-09-11",

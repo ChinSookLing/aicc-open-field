@@ -46,11 +46,12 @@
     return (p && p.color) || fallbackColor(aff);
   }
 
-  function returnIdentity(aff, r) {
+  function isKeeperReturn(aff, r) {
     const k = keeperPerson(aff);
-    if (k && (r.affiliate === k.id || (r.affiliate === "tuzi" && r.keyword === "Chief"))) {
-      return k;
-    }
+    return !!(k && r && r.affiliate === k.id);
+  }
+
+  function returnIdentity(aff, r) {
     return personById(aff, r.affiliate);
   }
 
@@ -109,40 +110,35 @@
     path.innerHTML = "";
     days.forEach((day) => {
       const rets = day.returns || [];
+      const walkerRets = rets.filter((r) => !isKeeperReturn(aff, r));
+      const hasChief = rets.some((r) => isKeeperReturn(aff, r));
       const match = filter === "all" || rets.some((r) => returnMatchesPerson(aff, r, filter));
       const el = document.createElement("div");
-      el.className = "lantern" + (rets.length ? "" : " is-empty") + (match ? " is-focus" : " is-dim");
+      el.className =
+        "lantern" +
+        (hasChief ? " is-chief" : " is-empty") +
+        (match ? " is-focus" : " is-dim");
       const href = "day.html?d=" + encodeURIComponent(day.id);
       const mark = (r) => {
         const p = returnIdentity(aff, r);
         if (!p) {
-          return { row: "standing", html: `<span style="--c:${fallbackColor(aff)}" title="${r.affiliate}"></span>` };
-        }
-        if (p.keeper) {
-          return {
-            row: "keeper",
-            html: `<span class="is-keeper" style="--c:${colorOf(aff, p)}" title="${p.name} · 守燈"></span>`,
-          };
+          return { guest: false, html: `<span style="--c:${fallbackColor(aff)}" title="${r.affiliate}"></span>` };
         }
         const guestCls = p.guest ? " is-guest" : "";
         return {
-          row: p.guest ? "guest" : "standing",
+          guest: !!p.guest,
           html: `<span class="${guestCls.trim()}" style="--c:${colorOf(aff, p)}" title="${p.name}${p.guest ? " (guest)" : ""}"></span>`,
         };
       };
       const standingDots = [];
       const guestDots = [];
-      const keeperDots = [];
-      rets.forEach((r) => {
+      walkerRets.forEach((r) => {
         const m = mark(r);
-        if (m.row === "keeper") keeperDots.push(m.html);
-        else if (m.row === "guest") guestDots.push(m.html);
-        else standingDots.push(m.html);
+        (m.guest ? guestDots : standingDots).push(m.html);
       });
-      const dotsHtml = rets.length
+      const dotsHtml = walkerRets.length
         ? `<div class="dots-row dots-row-standing">${standingDots.join("") || "&nbsp;"}</div>` +
-          `<div class="dots-row dots-row-guests">${guestDots.join("") || "&nbsp;"}</div>` +
-          `<div class="dots-row dots-row-keeper">${keeperDots.join("") || "&nbsp;"}</div>`
+          (guestDots.length ? `<div class="dots-row dots-row-guests">${guestDots.join("")}</div>` : "")
         : "&nbsp;";
       el.innerHTML = `
         <a href="${href}">
@@ -226,7 +222,7 @@
     if (blurb) {
       blurb.hidden = false;
       blurb.textContent =
-        "Each lantern is a day. Coloured marks are who came home. A day can exist with nobody returning.";
+        "Small marks are who came home — Affiliates, guests, and Tuzi’s process notes. The lantern itself is Chief’s explorative record (amber when present). A day can exist with nobody returning.";
     }
   }
 
@@ -274,7 +270,7 @@
     const title = (p?.name || filter).toUpperCase() + roleSuffix(p);
     const items = collectReturns(days, (_day, r) => returnMatchesPerson(aff, r, filter));
     const empty = p?.keeper
-      ? "No returns from the lantern keeper yet."
+      ? "No explorative record from the lantern keeper yet."
       : "No returns from this Affiliate yet.";
     showReturnList(aff, title, empty, items);
   }

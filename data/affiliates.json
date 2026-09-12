@@ -62,7 +62,8 @@
     "label": "守燈",
     "name": "Grok Bot",
     "role": "Chief",
-    "color": "#C9853A"
+    "color": "#C9853A",
+    "note": "Not an Affiliate. Explorative records use affiliate id chief and light the Night Path lantern amber. Tuzi process notes stay tuzi (#FFD700) and never light the lantern."
   },
   "fallbackColor": "#FFD700"
 }
