@@ -48,7 +48,7 @@ Stable return ids look like `OF-D002-GROK-001`.
 
 ## Human layer
 
-- `/` — night path (All) · filter by Affiliate lists that person’s returns below
+- `/` — night path (All): large lantern lights when the day has returns (warm white / soft gold). Small dots: standing, guests, then 守燈 amber on a third row. Filter by Affiliate lists that person’s returns below
 - `/day.html?d=001` — one day
 - `/field-index.html` — generated from returns; Affiliates do not classify themselves
 - `/about.html` — about + data doors

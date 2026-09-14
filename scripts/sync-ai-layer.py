@@ -201,8 +201,9 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
         "Standing: " + " · ".join(p["name"] for p in aff.get("standing") or []),
         "Guests: " + " · ".join(p["name"] for p in aff.get("guests") or []),
         keeper_display(aff) + " · colour `#C9853A` · not standing, not guest.",
-        "Tuzi returns are process chronicle (gold `#FFD700`) and never light the lantern.",
-        "Chief explorative records use affiliate `chief`, sort last on the day, and light the Night Path lantern amber. Empty/dark lanterns are allowed.",
+        "Tuzi returns are process chronicle (gold `#FFD700`) and mark standing-row gold dots.",
+        "The large Night Path lantern lights when a day has at least one return — warm white / soft gold, not Chief amber. Empty/dark lanterns stay dark when nobody returned.",
+        "Chief explorative records use affiliate `chief`, sort last on the day, and appear as third-row amber dots when Chief returned that day. Chief is not the big lantern.",
         "",
     ]
     for day in days_doc.get("days") or []:
@@ -271,8 +272,9 @@ def build_ai_html(days_doc, aff, rev: dict) -> str:
         f"<p><strong>{html.escape(keeper_display(aff))}</strong> · colour "
         f"<code>{html.escape(k['color'])}</code> · not a standing or guest Affiliate. "
         "Explorative records use affiliate <code>chief</code>, sort last on the day, "
-        "and light the Night Path lantern. Empty/dark lanterns are allowed. "
-        "Tuzi process notes stay <code>tuzi</code> (gold <code>#FFD700</code>).</p>"
+        "and appear as third-row amber dots on the Night Path. "
+        "The large lantern lights when a day has any return (warm white / soft gold); "
+        "empty days stay dark. Tuzi process notes stay <code>tuzi</code> (gold <code>#FFD700</code>).</p>"
     )
 
     for day in days_doc.get("days") or []:
@@ -360,7 +362,11 @@ def build_about_roster_html(aff) -> str:
     full = html.escape(k["fullName"])
     role = html.escape(k["role"])
     keeper_html = (
-        f'  <p class="about-keeper"><span class="about-keeper-label">{label}</span>: {full} ({role})</p>'
+        f'  <p class="about-keeper"><span class="about-keeper-label">{label}</span>: {full} ({role})</p>\n'
+        '  <p class="about-path-legend">Night Path: the large lantern lights when a day has at least one return '
+        "(warm white / soft gold). Empty days stay dark. Standing Affiliates and guests mark the first two "
+        "small-dot rows. 守燈 presence is a third-row amber dot (#C9853A) when Chief returned that day — "
+        "not the lantern itself.</p>"
     )
 
     return "\n".join(
@@ -513,6 +519,15 @@ def main(check_only: bool = False) -> int:
                 ok = False
             if "#C9853A" not in idx or "not a standing or guest Affiliate" not in idx:
                 print("STALE: index.html AI layer missing keeper colour / non-affiliate note")
+                ok = False
+            if "third-row amber dots" not in idx:
+                print("STALE: index.html AI layer missing Night Path third-row semantics")
+                ok = False
+            if "third-row amber dots" not in snap_text:
+                print("STALE: field-snapshot.md missing Night Path third-row semantics")
+                ok = False
+            if "about-path-legend" not in about:
+                print("STALE: about.html missing Night Path visual legend")
                 ok = False
 
         if not SNAP.exists():
