@@ -141,26 +141,24 @@ a { color: inherit; text-decoration: none; }
   width: 1.1rem; height: 1.1rem;
   margin: 0 auto .55rem;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #fff7d6, var(--lantern) 45%, #c48a2a 100%);
-  box-shadow: 0 0 18px rgba(240, 194, 75, .55), 0 0 40px rgba(240, 194, 75, .2);
+  background: radial-gradient(circle at 40% 35%, #fffef8, var(--lantern) 48%, #e6d392 100%);
+  box-shadow: 0 0 18px rgba(246, 231, 178, .55), 0 0 40px rgba(246, 231, 178, .22);
 }
 .lantern.is-empty .flame {
   background: radial-gradient(circle at 40% 35%, rgba(255,255,255,.2), rgba(180,180,180,.15));
   box-shadow: 0 0 10px rgba(255,255,255,.08);
   opacity: .55;
 }
-.lantern.is-chief .flame {
-  background: radial-gradient(circle at 40% 35%, #f8e6c8, var(--chief) 48%, #8a4f1a 100%);
-  box-shadow: 0 0 18px rgba(201, 133, 58, .65), 0 0 40px rgba(201, 133, 58, .28);
+.lantern.is-lit .flame {
   opacity: 1;
 }
-.lantern.is-chief .pole {
-  background: linear-gradient(180deg, rgba(201, 133, 58, .8), rgba(201, 133, 58, .05));
+.lantern.is-lit .pole {
+  background: linear-gradient(180deg, rgba(246, 231, 178, .75), rgba(246, 231, 178, .05));
 }
 .lantern .pole {
   width: 2px; height: 2.2rem;
   margin: 0 auto;
-  background: linear-gradient(180deg, rgba(240,194,75,.7), rgba(240,194,75,.05));
+  background: linear-gradient(180deg, rgba(246,231,178,.7), rgba(246,231,178,.05));
 }
 .lantern .label {
   margin-top: .55rem;
@@ -179,7 +177,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: flex-end;
   gap: .14rem;
-  min-height: 1.15rem;
+  min-height: 1.7rem;
   margin-bottom: .35rem;
 }
 .lantern .dots-row {
@@ -194,8 +192,8 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 6px var(--c);
 }
 .lantern.is-dim { opacity: .28; filter: grayscale(.4); }
-.lantern.is-chief.is-focus .flame {
-  box-shadow: 0 0 22px rgba(201, 133, 58, .9), 0 0 50px rgba(201, 133, 58, .4);
+.lantern.is-lit.is-focus .flame {
+  box-shadow: 0 0 22px rgba(246, 231, 178, .85), 0 0 50px rgba(246, 231, 178, .35);
 }
 
 .blurb {
@@ -444,6 +442,14 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: .12em;
   color: var(--chief);
   font-weight: 500;
+}
+.about-path-legend {
+  margin: .55rem auto 0;
+  max-width: 28rem;
+  font-family: var(--font-serif);
+  font-size: .88rem;
+  line-height: 1.75;
+  color: var(--muted);
 }
 .about .names {
   margin-top: 2rem;

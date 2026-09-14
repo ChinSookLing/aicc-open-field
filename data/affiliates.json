@@ -63,7 +63,7 @@
     "name": "Grok Bot",
     "role": "Chief",
     "color": "#C9853A",
-    "note": "Not a standing or guest Affiliate. 守燈: Grok Bot (Chief), colour #C9853A. Explorative records use affiliate id chief, sort last on the day, and light the Night Path lantern amber. Empty/dark lanterns are allowed. Tuzi process notes stay tuzi (#FFD700) and never light the lantern."
+    "note": "Not a standing or guest Affiliate. 守燈: Grok Bot (Chief), colour #C9853A. Explorative records use affiliate id chief, sort last on the day, and appear as third-row amber dots on the Night Path. The large lantern lights when a day has at least one return (warm white / soft gold), not Chief amber. Empty/dark lanterns stay dark when nobody returned. Tuzi process notes stay tuzi (#FFD700)."
   },
   "fallbackColor": "#FFD700"
 }

@@ -118,35 +118,42 @@
     days.forEach((day) => {
       const rets = day.returns || [];
       const walkerRets = rets.filter((r) => !isKeeperReturn(aff, r));
-      const hasChief = rets.some((r) => isKeeperReturn(aff, r));
+      const keeperRets = rets.filter((r) => isKeeperReturn(aff, r));
+      const hasReturns = rets.length > 0;
       const match = filter === "all" || rets.some((r) => returnMatchesPerson(aff, r, filter));
       const el = document.createElement("div");
       el.className =
         "lantern" +
-        (hasChief ? " is-chief" : " is-empty") +
+        (hasReturns ? " is-lit" : " is-empty") +
         (match ? " is-focus" : " is-dim");
       const href = "day.html?d=" + encodeURIComponent(day.id);
       const mark = (r) => {
         const p = returnIdentity(aff, r);
         if (!p) {
-          return { guest: false, html: `<span style="--c:${fallbackColor(aff)}" title="${r.affiliate}"></span>` };
+          return { kind: "standing", html: `<span style="--c:${fallbackColor(aff)}" title="${r.affiliate}"></span>` };
         }
-        const guestCls = p.guest ? " is-guest" : "";
+        const kind = p.keeper ? "keeper" : p.guest ? "guest" : "standing";
+        const extra = p.guest ? " is-guest" : p.keeper ? " is-keeper" : "";
+        const title = p.keeper ? `${p.name} (守燈)` : p.guest ? `${p.name} (guest)` : p.name;
         return {
-          guest: !!p.guest,
-          html: `<span class="${guestCls.trim()}" style="--c:${colorOf(aff, p)}" title="${p.name}${p.guest ? " (guest)" : ""}"></span>`,
+          kind,
+          html: `<span class="${extra.trim()}" style="--c:${colorOf(aff, p)}" title="${title}"></span>`,
         };
       };
       const standingDots = [];
       const guestDots = [];
+      const chiefDots = [];
       walkerRets.forEach((r) => {
         const m = mark(r);
-        (m.guest ? guestDots : standingDots).push(m.html);
+        (m.kind === "guest" ? guestDots : standingDots).push(m.html);
       });
-      const dotsHtml = walkerRets.length
-        ? `<div class="dots-row dots-row-standing">${standingDots.join("") || "&nbsp;"}</div>` +
-          (guestDots.length ? `<div class="dots-row dots-row-guests">${guestDots.join("")}</div>` : "")
-        : "&nbsp;";
+      keeperRets.forEach((r) => chiefDots.push(mark(r).html));
+      const row = (cls, items) =>
+        `<div class="dots-row ${cls}">${items.join("") || "&nbsp;"}</div>`;
+      const dotsHtml =
+        row("dots-row-standing", standingDots) +
+        row("dots-row-guests", guestDots) +
+        row("dots-row-chief", chiefDots);
       el.innerHTML = `
         <a href="${href}">
           <div class="dots">${dotsHtml}</div>
@@ -230,7 +237,7 @@
     if (blurb) {
       blurb.hidden = false;
       blurb.textContent =
-        "Small marks are who came home — Affiliates, guests, and Tuzi’s process notes. The lantern itself is Chief’s explorative record (amber when present). A day can exist with nobody returning.";
+        "Small marks are who came home — standing Affiliates, guests, and Tuzi’s process notes on the first two rows. The large lantern lights when a day has at least one return (warm white / soft gold). 守燈 presence is a third-row amber dot when Chief returned that day. A day can exist with nobody returning.";
     }
   }
 
