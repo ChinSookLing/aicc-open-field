@@ -55,6 +55,12 @@
       "name": "Qwen",
       "color": "#9B7EBD",
       "guest": true
+    },
+    {
+      "id": "mistral",
+      "name": "Mistral / Vibe",
+      "color": "#7B68EE",
+      "guest": true
     }
   ],
   "keeper": {
