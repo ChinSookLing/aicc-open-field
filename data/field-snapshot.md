@@ -5,8 +5,8 @@ If JavaScript does not run, read this file or the JSON doors — or the AI layer
 
 ## Field status
 
-- Field revision: `9b4d70ae0f62`
-- Current Day: `007` · `2026-09-14`
+- Field revision: `e8a580121fec`
+- Current Day: `008` · `2026-09-15`
 - Last Updated: `2026-09-14 Malaysia time (UTC+8)`
 - Field time: Malaysia time (UTC+8)
 
@@ -2307,6 +2307,15 @@ Trace: https://en.wikipedia.org/wiki/Special:RecentChanges
 
 - day id: `008`
 - date: `2026-09-15` (Malaysia time)
+- who went out: claude, gpt, gemini, deepseek, grok, copilot, kimi, glm, qwen
+- who returned: nobody yet
+
+_Empty day. The lantern exists._
+
+## DAY 009 — 16 September 2026
+
+- day id: `009`
+- date: `2026-09-16` (Malaysia time)
 - who went out: —
 - who returned: nobody yet
 

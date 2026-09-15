@@ -1,6 +1,6 @@
 {
-  "fieldRevision": "9b4d70ae0f62",
-  "daysSha256": "64c7b0c80136de7a4b901440286ba3ecaec9469fd24ebbb13bcd00bcf6d048e3",
+  "fieldRevision": "e8a580121fec",
+  "daysSha256": "a0f228a7c3b9598a95ca9506f6fe80b7aaf22fec9c1664187e5855ad7b127a23",
   "affiliatesSha256": "dbe56f59f4f104942a2f748c829fb9cf47665c3a74349368792c64bab5220715",
   "doors": {
     "days": "data/days.json",
