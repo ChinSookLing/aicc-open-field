@@ -110,6 +110,35 @@ def people_map(aff):
     return people
 
 
+def constitution_copy(aff) -> dict:
+    """Living go-out list from affiliates.json. Not a rewrite of Day 003 chronicle."""
+    people = people_map(aff)
+    c = aff.get("constitution") or {}
+    ids = list(c.get("goOut") or [])
+    names = []
+    for i in ids:
+        p = people.get(i) or {}
+        names.append(p.get("name") or i)
+    kimi = next((p for p in (aff.get("guests") or []) if p.get("id") == "kimi"), None)
+    kimi_note = (kimi or {}).get("constitutionNote") or ""
+    note = c.get("note") or kimi_note
+    names_line = ", ".join(names)
+    names_md = " · ".join(names)
+    status_line = names_line
+    if any(i == "kimi" for i in ids):
+        status_line = f"{names_line}. Kimi K3 verified free wander / live fetch 2026-09-21"
+    return {
+        "ids": ids,
+        "names": names,
+        "names_line": names_line,
+        "names_md": names_md,
+        "note": note,
+        "kimi_note": kimi_note,
+        "status_line": status_line,
+        "who_can_go_out": names_line,
+    }
+
+
 def affiliate_ids_in_days(days_doc) -> set[str]:
     ids: set[str] = set()
     for day in days_doc.get("days") or []:
@@ -185,6 +214,13 @@ def build_snapshot(days_doc, aff, rev: dict) -> str:
         f"- Current Day: `{st['current_num']}` · `{st['current_date']}`",
         f"- Last Updated: `{st['last_updated']}`",
         "- Field time: Malaysia time (UTC+8)",
+    ]
+    con = constitution_copy(aff)
+    if con["ids"]:
+        L.append(f"- Who can go out (living): {con['names_md']}")
+        if con["note"]:
+            L.append(f"- Constitution note: {con['note']}")
+    L += [
         "",
         "## Machine-readable doors",
         "",
@@ -257,6 +293,15 @@ def build_ai_html(days_doc, aff, rev: dict) -> str:
         f'<a href="https://openfield.civilisationfield.com/data/field-revision.json">data/field-revision.json</a></p>',
         f"<p><strong>Field status:</strong> Current Day {html.escape(st['current_num'])} · "
         f"{html.escape(st['current_date'])} · Last Updated {html.escape(st['last_updated'])}</p>",
+    ]
+    con = constitution_copy(aff)
+    if con["ids"]:
+        parts.append(
+            f"<p><strong>Who can go out (living constitution):</strong> "
+            f"{html.escape(con['status_line'])}. "
+            "Historical Day 003 chronicle bodies are not rewritten.</p>"
+        )
+    parts += [
         "<p>Also: "
         '<a href="https://openfield.civilisationfield.com/data/days.json">data/days.json</a> · '
         '<a href="https://openfield.civilisationfield.com/data/affiliates.json">data/affiliates.json</a> · '
@@ -319,36 +364,46 @@ def build_ai_html(days_doc, aff, rev: dict) -> str:
     return "\n".join(parts) + "\n"
 
 
-def build_about_status_html(days_doc, rev: dict) -> str:
+def build_about_status_html(days_doc, rev: dict, aff: dict | None = None) -> str:
     st = field_status(days_doc)
     rev_id = html.escape(rev["fieldRevision"])
-    return "\n".join(
-        [
-            STATUS_START,
-            f'<section class="about-block about-status" aria-labelledby="field-status" data-field-revision="{rev_id}">',
-            '  <h2 id="field-status" class="about-h">Field status</h2>',
-            '  <dl class="about-status-list">',
-            "    <div>",
-            "      <dt>Field revision</dt>",
-            f"      <dd><code>{rev_id}</code></dd>",
-            "    </div>",
-            "    <div>",
-            "      <dt>Current Day</dt>",
-            f'      <dd>{html.escape(st["current_num"])} · {html.escape(st["current_date"])}</dd>',
-            "    </div>",
-            "    <div>",
-            "      <dt>Last Updated</dt>",
-            f'      <dd>{html.escape(st["last_updated"])}</dd>',
-            "    </div>",
-            "    <div>",
-            "      <dt>Field time</dt>",
-            "      <dd>Malaysia time (UTC+8)</dd>",
-            "    </div>",
-            "  </dl>",
-            "</section>",
-            STATUS_END,
-        ]
-    ) + "\n"
+    rows = [
+        STATUS_START,
+        f'<section class="about-block about-status" aria-labelledby="field-status" data-field-revision="{rev_id}">',
+        '  <h2 id="field-status" class="about-h">Field status</h2>',
+        '  <dl class="about-status-list">',
+        "    <div>",
+        "      <dt>Field revision</dt>",
+        f"      <dd><code>{rev_id}</code></dd>",
+        "    </div>",
+        "    <div>",
+        "      <dt>Current Day</dt>",
+        f'      <dd>{html.escape(st["current_num"])} · {html.escape(st["current_date"])}</dd>',
+        "    </div>",
+        "    <div>",
+        "      <dt>Last Updated</dt>",
+        f'      <dd>{html.escape(st["last_updated"])}</dd>',
+        "    </div>",
+        "    <div>",
+        "      <dt>Field time</dt>",
+        "      <dd>Malaysia time (UTC+8)</dd>",
+        "    </div>",
+    ]
+    if aff:
+        con = constitution_copy(aff)
+        if con["ids"]:
+            rows += [
+                "    <div>",
+                "      <dt>Who can go out</dt>",
+                f'      <dd>{html.escape(con["status_line"])}.</dd>',
+                "    </div>",
+            ]
+    rows += [
+        "  </dl>",
+        "</section>",
+        STATUS_END,
+    ]
+    return "\n".join(rows) + "\n"
 
 
 def build_about_roster_html(aff) -> str:
@@ -455,7 +510,7 @@ def main(check_only: bool = False) -> int:
     rev_id = rev["fieldRevision"]
     snap = build_snapshot(days_doc, aff, rev)
     ai_html = build_ai_html(days_doc, aff, rev)
-    status_html = build_about_status_html(days_doc, rev)
+    status_html = build_about_status_html(days_doc, rev, aff)
     roster_html = build_about_roster_html(aff)
     rev_json = json.dumps(rev, ensure_ascii=False, indent=2) + "\n"
 
@@ -489,6 +544,24 @@ def main(check_only: bool = False) -> int:
         elif not revision_present(about, rev_id):
             print("STALE: about.html missing fieldRevision", rev_id)
             ok = False
+
+        con = constitution_copy(aff)
+        if con["ids"]:
+            if "Who can go out" not in about:
+                print("STALE: about.html missing Who can go out")
+                ok = False
+            elif con["status_line"] not in about and html.escape(con["status_line"]) not in about:
+                print("STALE: about.html go-out list mismatch")
+                ok = False
+            if "Who can go out (living constitution)" not in idx:
+                print("STALE: index.html AI layer missing living constitution")
+                ok = False
+            elif con["status_line"] not in idx and html.escape(con["status_line"]) not in idx:
+                print("STALE: index.html AI layer go-out list mismatch")
+                ok = False
+            if f"- Who can go out (living): {con['names_md']}" not in snap_text:
+                print("STALE: field-snapshot.md missing living go-out list")
+                ok = False
 
         if ROSTER_START not in about or ROSTER_END not in about:
             print("MISSING: OF-ABOUT-ROSTER markers in about.html")

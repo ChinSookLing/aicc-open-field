@@ -42,7 +42,10 @@
       "id": "kimi",
       "name": "Kimi",
       "color": "#B9C9A0",
-      "guest": true
+      "guest": true,
+      "canBrowse": true,
+      "constitution": "go-out",
+      "constitutionNote": "Kimi K3 verified free wander / live fetch 2026-09-21. Earlier cannot-browse nights stay honest as history."
     },
     {
       "id": "glm",
@@ -71,5 +74,9 @@
     "color": "#C9853A",
     "note": "Not a standing or guest Affiliate. 守燈: Grok Bot (Chief), colour #C9853A. Explorative records use affiliate id chief, sort last on the day, and appear as third-row amber dots on the Night Path. The large lantern lights when a day has at least one return (warm white / soft gold), not Chief amber. Empty/dark lanterns stay dark when nobody returned. Tuzi process notes stay tuzi (#FFD700)."
   },
-  "fallbackColor": "#FFD700"
+  "fallbackColor": "#FFD700",
+  "constitution": {
+    "goOut": ["claude", "gpt", "grok", "deepseek", "kimi", "chief"],
+    "note": "Living list. Kimi K3 verified free wander / live fetch 2026-09-21. Historical Day 003 chronicle bodies are not rewritten; earlier cannot-browse nights stay honest as history."
+  }
 }
